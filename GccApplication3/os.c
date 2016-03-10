@@ -192,7 +192,7 @@ void Kernel_Create_Task_At( PD *p, voidfuncptr f , PRIORITY py, int arg)
 	p->priority=py;
    /*----END of NEW CODE----*/
    p->state = READY;
-	enqueue(ready_queue[p->priority],p);
+	enqueue(&ready_queue[p->priority],p);
 }
 
 
@@ -236,7 +236,7 @@ static void Dispatch()
 	
 	for (i=0;i<10;i++){
 		if (ready_queue[i].head!=NULL){
-			Cp=dequeue(ready_queue[i]);
+			Cp=dequeue(&ready_queue[i]);
 			CurrentSp = Cp->sp;
 			Cp->state = RUNNING;
 			Enable_Interrupt();
@@ -399,7 +399,9 @@ void Task_Next()
    if (KernelActive) {
      Disable_Interrupt();
      Cp ->request = NEXT;
+	  enqueue(&ready_queue[Cp->priority],Cp);
      Enter_Kernel();
+	  
   }
 }
 
@@ -411,7 +413,7 @@ void Task_Terminate()
 {
    if (KernelActive) {
       Disable_Interrupt();
-      Cp -> request = TERMINATE;
+      Cp-> request = TERMINATE;
       Enter_Kernel();
      /* never returns here! */
    }

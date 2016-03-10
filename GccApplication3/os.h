@@ -85,7 +85,7 @@ struct ProcessDescriptor
 	PRIORITY priority;
 	PID pid;
 	unsigned int arg;
-	unsigned int suspend=0;
+	unsigned int suspend;
 	PD* next;
 };
 

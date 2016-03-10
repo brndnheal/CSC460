@@ -3,6 +3,8 @@
 #include <avr/interrupt.h>
 #include "os.h"
 
+// Hello!
+
 /**
  * \file active.c
  * \brief A Skeleton Implementation of an RTOS

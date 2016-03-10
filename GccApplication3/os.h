@@ -19,10 +19,11 @@ typedef unsigned char PRIORITY;
 typedef unsigned int EVENT;      // always non-zero if it is valid
 typedef unsigned int TICK;
 
+
 // void OS_Init(void);      redefined as main()
 void OS_Abort(void);
 
-//PID  Task_Create( void (*f)(void), PRIORITY py, int arg); //implement by changing task_create
+PID  Task_Create( void (*f)(void), PRIORITY py, int arg); //implement by changing task_create
 void Task_Terminate(void); //done
 void Task_Yield(void);//done
 int  Task_GetArg(void);//what?
@@ -83,7 +84,8 @@ struct ProcessDescriptor
 	TICK tick;
 	PRIORITY priority;
 	PID pid;
-	
+	unsigned int arg;
+	unsigned int suspend;
 	PD* next;
 };
 

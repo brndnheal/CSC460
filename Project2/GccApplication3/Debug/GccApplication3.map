@@ -171,7 +171,7 @@ END GROUP
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x580
+.text           0x00000000      0x628
  *(.vectors)
  .vectors       0x00000000       0xe4 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.0.90/gcc/dev/atmega2560/avr6/crtatmega2560.o
                 0x00000000                __vector_default
@@ -294,38 +294,38 @@ END GROUP
                 0x000002f6       0x22 os.o
                 0x000002f6                Task_Terminate
  .text.Kernel_Create_Task_At
-                0x00000318       0x50 os.o
+                0x00000318       0x6c os.o
                 0x00000318                Kernel_Create_Task_At
  .text.Kernel_Create_Task
-                0x00000368       0x64 os.o
+                0x00000384       0x70 os.o
  .text.set_timer
-                0x000003cc       0x2e os.o
-                0x000003cc                set_timer
- .text.OS_Init  0x000003fa       0x28 os.o
-                0x000003fa                OS_Init
+                0x000003f4       0x2e os.o
+                0x000003f4                set_timer
+ .text.OS_Init  0x00000422       0x60 os.o
+                0x00000422                OS_Init
  .text.OS_Start
-                0x00000422       0x90 os.o
-                0x00000422                OS_Start
+                0x00000482       0x9e os.o
+                0x00000482                OS_Start
  .text.Task_Create
-                0x000004b2       0x2e os.o
-                0x000004b2                Task_Create
+                0x00000520       0x58 os.o
+                0x00000520                Task_Create
  .text.Task_Next
-                0x000004e0       0x22 os.o
-                0x000004e0                Task_Next
- .text.Ping     0x00000502       0x2a os.o
-                0x00000502                Ping
- .text.Pong     0x0000052c       0x2a os.o
-                0x0000052c                Pong
+                0x00000578       0x22 os.o
+                0x00000578                Task_Next
+ .text.Ping     0x0000059a       0x2a os.o
+                0x0000059a                Ping
+ .text.Pong     0x000005c4       0x2a os.o
+                0x000005c4                Pong
  .text.__vector_17
-                0x00000556       0x14 os.o
-                0x00000556                __vector_17
- .text.main     0x0000056a       0x12 os.o
-                0x0000056a                main
-                0x0000057c                . = ALIGN (0x2)
+                0x000005ee       0x14 os.o
+                0x000005ee                __vector_17
+ .text.main     0x00000602       0x22 os.o
+                0x00000602                main
+                0x00000624                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x0000057c        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_exit.o)
-                0x0000057c                _exit
-                0x0000057c                exit
+ .fini9         0x00000624        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_exit.o)
+                0x00000624                _exit
+                0x00000624                exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -344,11 +344,11 @@ END GROUP
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x0000057c        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_exit.o)
+ .fini0         0x00000624        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_exit.o)
  *(.fini0)
-                0x00000580                _etext = .
+                0x00000628                _etext = .
 
-.data           0x00800200        0x0 load address 0x00000580
+.data           0x00800200        0x0 load address 0x00000628
                 0x00800200                PROVIDE (__data_start, .)
  *(.data)
  *(.data*)
@@ -359,7 +359,7 @@ END GROUP
                 0x00800200                _edata = .
                 0x00800200                PROVIDE (__data_end, .)
 
-.bss            0x00800200      0x874
+.bss            0x00800200      0x884
                 0x00800200                PROVIDE (__bss_start, .)
  *(.bss)
  *(.bss*)
@@ -368,21 +368,21 @@ END GROUP
                 0x00800202        0x2 os.o
  .bss.NextP     0x00800204        0x2 os.o
  .bss.Cp        0x00800206        0x2 os.o
- .bss.Process   0x00800208      0x868 os.o
+ .bss.Process   0x00800208      0x878 os.o
  *(COMMON)
- COMMON         0x00800a70        0x4 os.o
-                0x00800a70                CurrentSp
-                0x00800a72                KernelSp
-                0x00800a74                PROVIDE (__bss_end, .)
-                0x00000580                __data_load_start = LOADADDR (.data)
-                0x00000580                __data_load_end = (__data_load_start + SIZEOF (.data))
+ COMMON         0x00800a80        0x4 os.o
+                0x00800a80                CurrentSp
+                0x00800a82                KernelSp
+                0x00800a84                PROVIDE (__bss_end, .)
+                0x00000628                __data_load_start = LOADADDR (.data)
+                0x00000628                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x00800a74        0x0
-                0x00800a74                PROVIDE (__noinit_start, .)
+.noinit         0x00800a84        0x0
+                0x00800a84                PROVIDE (__noinit_start, .)
  *(.noinit*)
-                0x00800a74                PROVIDE (__noinit_end, .)
-                0x00800a74                _end = .
-                0x00800a74                PROVIDE (__heap_start, .)
+                0x00800a84                PROVIDE (__noinit_end, .)
+                0x00800a84                _end = .
+                0x00800a84                PROVIDE (__heap_start, .)
 
 .eeprom         0x00810000        0x0
  *(.eeprom*)
@@ -456,33 +456,33 @@ END GROUP
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000      0x5fd
+.debug_info     0x00000000      0x6ae
  *(.debug_info .gnu.linkonce.wi.*)
- .debug_info    0x00000000      0x580 os.o
- .debug_info    0x00000580       0x7d cswitch.o
+ .debug_info    0x00000000      0x631 os.o
+ .debug_info    0x00000631       0x7d cswitch.o
 
-.debug_abbrev   0x00000000      0x28e
+.debug_abbrev   0x00000000      0x2c0
  *(.debug_abbrev)
- .debug_abbrev  0x00000000      0x27a os.o
- .debug_abbrev  0x0000027a       0x14 cswitch.o
+ .debug_abbrev  0x00000000      0x2ac os.o
+ .debug_abbrev  0x000002ac       0x14 cswitch.o
 
-.debug_line     0x00000000      0x493
+.debug_line     0x00000000      0x505
  *(.debug_line .debug_line.* .debug_line_end)
- .debug_line    0x00000000      0x3c0 os.o
- .debug_line    0x000003c0       0xd3 cswitch.o
+ .debug_line    0x00000000      0x432 os.o
+ .debug_line    0x00000432       0xd3 cswitch.o
 
-.debug_frame    0x00000000       0xf8
+.debug_frame    0x00000000      0x124
  *(.debug_frame)
- .debug_frame   0x00000000       0xf8 os.o
+ .debug_frame   0x00000000      0x124 os.o
 
 .debug_str      0x00000000      0x340
  *(.debug_str)
  .debug_str     0x00000000      0x340 os.o
                                 0x374 (size before relaxing)
 
-.debug_loc      0x00000000      0x2e3
+.debug_loc      0x00000000      0x47c
  *(.debug_loc)
- .debug_loc     0x00000000      0x2e3 os.o
+ .debug_loc     0x00000000      0x47c os.o
 
 .debug_macinfo
  *(.debug_macinfo)

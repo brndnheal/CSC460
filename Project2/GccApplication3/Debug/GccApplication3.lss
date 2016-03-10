@@ -3,31 +3,31 @@ GccApplication3.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000000  00800200  00800200  000005f4  2**0
+  0 .data         00000000  00800200  00800200  0000069c  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         00000580  00000000  00000000  00000074  2**1
+  1 .text         00000628  00000000  00000000  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .bss          00000874  00800200  00800200  000005f4  2**0
+  2 .bss          00000884  00800200  00800200  0000069c  2**0
                   ALLOC
-  3 .comment      00000030  00000000  00000000  000005f4  2**0
+  3 .comment      00000030  00000000  00000000  0000069c  2**0
                   CONTENTS, READONLY
-  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000624  2**2
+  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  000006cc  2**2
                   CONTENTS, READONLY
-  5 .debug_aranges 000000a0  00000000  00000000  00000668  2**3
+  5 .debug_aranges 000000a0  00000000  00000000  00000710  2**3
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   000005fd  00000000  00000000  00000708  2**0
+  6 .debug_info   000006ae  00000000  00000000  000007b0  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 0000028e  00000000  00000000  00000d05  2**0
+  7 .debug_abbrev 000002c0  00000000  00000000  00000e5e  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000493  00000000  00000000  00000f93  2**0
+  8 .debug_line   00000505  00000000  00000000  0000111e  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  000000f8  00000000  00000000  00001428  2**2
+  9 .debug_frame  00000124  00000000  00000000  00001624  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    00000340  00000000  00000000  00001520  2**0
+ 10 .debug_str    00000340  00000000  00000000  00001748  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    000002e3  00000000  00000000  00001860  2**0
+ 11 .debug_loc    0000047c  00000000  00000000  00001a88  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000070  00000000  00000000  00001b43  2**0
+ 12 .debug_ranges 00000070  00000000  00000000  00001f04  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -67,7 +67,7 @@ Disassembly of section .text:
   3e:	00 00       	nop
   40:	63 c0       	rjmp	.+198    	; 0x108 <__bad_interrupt>
   42:	00 00       	nop
-  44:	88 c2       	rjmp	.+1296   	; 0x556 <__vector_17>
+  44:	d4 c2       	rjmp	.+1448   	; 0x5ee <__vector_17>
   46:	00 00       	nop
   48:	5f c0       	rjmp	.+190    	; 0x108 <__bad_interrupt>
   4a:	00 00       	nop
@@ -168,11 +168,11 @@ Disassembly of section .text:
   fc:	1d 92       	st	X+, r1
 
 000000fe <.do_clear_bss_start>:
-  fe:	a4 37       	cpi	r26, 0x74	; 116
+  fe:	a4 38       	cpi	r26, 0x84	; 132
  100:	b2 07       	cpc	r27, r18
  102:	e1 f7       	brne	.-8      	; 0xfc <.do_clear_bss_loop>
- 104:	32 d2       	rcall	.+1124   	; 0x56a <main>
- 106:	3a c2       	rjmp	.+1140   	; 0x57c <_exit>
+ 104:	7e d2       	rcall	.+1276   	; 0x602 <main>
+ 106:	8e c2       	rjmp	.+1308   	; 0x624 <_exit>
 
 00000108 <__bad_interrupt>:
  108:	7b cf       	rjmp	.-266    	; 0x0 <__vectors>
@@ -231,18 +231,18 @@ Exit_Kernel:
 		  in   r16, EIND
  156:	0c b7       	in	r16, 0x3c	; 60
         sts  KernelSp, r30
- 158:	e0 93 72 0a 	sts	0x0A72, r30
+ 158:	e0 93 82 0a 	sts	0x0A82, r30
         sts  KernelSp+1, r31
- 15c:	f0 93 73 0a 	sts	0x0A73, r31
+ 15c:	f0 93 83 0a 	sts	0x0A83, r31
 
         /*
           * We are now ready to restore Cp's context, i.e.,
           * switching the H/W stack pointer to CurrentSp.
           */ 
         lds  r30, CurrentSp
- 160:	e0 91 70 0a 	lds	r30, 0x0A70
+ 160:	e0 91 80 0a 	lds	r30, 0x0A80
         lds  r31, CurrentSp+1
- 164:	f0 91 71 0a 	lds	r31, 0x0A71
+ 164:	f0 91 81 0a 	lds	r31, 0x0A81
         out  SPL, r30
  168:	ed bf       	out	0x3d, r30	; 61
         out  SPH, r31
@@ -347,17 +347,17 @@ Enter_Kernel:
 		  in   r16, EIND
  204:	0c b7       	in	r16, 0x3c	; 60
         sts  CurrentSp, r30
- 206:	e0 93 70 0a 	sts	0x0A70, r30
+ 206:	e0 93 80 0a 	sts	0x0A80, r30
         sts  CurrentSp+1, r31
- 20a:	f0 93 71 0a 	sts	0x0A71, r31
+ 20a:	f0 93 81 0a 	sts	0x0A81, r31
         /*
           * We are now ready to restore kernel's context, i.e.,
           * switching the H/W stack pointer back to KernelSp.
           */ 
         lds  r30, KernelSp
- 20e:	e0 91 72 0a 	lds	r30, 0x0A72
+ 20e:	e0 91 82 0a 	lds	r30, 0x0A82
         lds  r31, KernelSp+1
- 212:	f0 91 73 0a 	lds	r31, 0x0A73
+ 212:	f0 91 83 0a 	lds	r31, 0x0A83
         out  SPL, r30
  216:	ed bf       	out	0x3d, r30	; 61
         out  SPH, r31
@@ -419,7 +419,7 @@ Enter_Kernel:
 	  
 	  
    while(Process[NextP].state != READY) {
- 266:	2d e0       	ldi	r18, 0x0D	; 13
+ 266:	2f e0       	ldi	r18, 0x0F	; 15
  268:	31 e0       	ldi	r19, 0x01	; 1
  26a:	0b c0       	rjmp	.+22     	; 0x282 <Dispatch+0x1c>
       NextP = (NextP + 1) % MAXPROCESS;
@@ -456,7 +456,7 @@ Enter_Kernel:
    Cp = &(Process[NextP]);
  2a2:	20 91 04 02 	lds	r18, 0x0204
  2a6:	30 91 05 02 	lds	r19, 0x0205
- 2aa:	8d e0       	ldi	r24, 0x0D	; 13
+ 2aa:	8f e0       	ldi	r24, 0x0F	; 15
  2ac:	91 e0       	ldi	r25, 0x01	; 1
  2ae:	28 9f       	mul	r18, r24
  2b0:	f0 01       	movw	r30, r0
@@ -472,8 +472,8 @@ Enter_Kernel:
    CurrentSp = Cp->sp;
  2c8:	80 81       	ld	r24, Z
  2ca:	91 81       	ldd	r25, Z+1	; 0x01
- 2cc:	90 93 71 0a 	sts	0x0A71, r25
- 2d0:	80 93 70 0a 	sts	0x0A70, r24
+ 2cc:	90 93 81 0a 	sts	0x0A81, r25
+ 2d0:	80 93 80 0a 	sts	0x0A80, r24
    Cp->state = RUNNING;
  2d4:	ee 5f       	subi	r30, 0xFE	; 254
  2d6:	fe 4f       	sbci	r31, 0xFE	; 254
@@ -517,509 +517,628 @@ void Task_Terminate()
  316:	08 95       	ret
 
 00000318 <Kernel_Create_Task_At>:
+ * it has called "Enter_Kernel()"; so that when we switch to it later, we
+ * can just restore its execution context on its stack.
+ * (See file "cswitch.S" for details.)
+ */
+void Kernel_Create_Task_At( PD *p, voidfuncptr f , PRIORITY py, int arg) 
+{   
+ 318:	0f 93       	push	r16
+ 31a:	1f 93       	push	r17
+ 31c:	cf 93       	push	r28
+ 31e:	df 93       	push	r29
 
    /*----BEGIN of NEW CODE----*/
    //Initialize the workspace (i.e., stack) and PD here!
 
    //Clear the contents of the workspace
    memset(&(p->workSpace),0,WORKSPACE);
- 318:	fc 01       	movw	r30, r24
- 31a:	32 96       	adiw	r30, 0x02	; 2
- 31c:	20 e0       	ldi	r18, 0x00	; 0
- 31e:	31 e0       	ldi	r19, 0x01	; 1
- 320:	df 01       	movw	r26, r30
- 322:	a9 01       	movw	r20, r18
- 324:	1d 92       	st	X+, r1
- 326:	41 50       	subi	r20, 0x01	; 1
- 328:	50 40       	sbci	r21, 0x00	; 0
- 32a:	e1 f7       	brne	.-8      	; 0x324 <Kernel_Create_Task_At+0xc>
+ 320:	fc 01       	movw	r30, r24
+ 322:	32 96       	adiw	r30, 0x02	; 2
+ 324:	a0 e0       	ldi	r26, 0x00	; 0
+ 326:	b1 e0       	ldi	r27, 0x01	; 1
+ 328:	ef 01       	movw	r28, r30
+ 32a:	8d 01       	movw	r16, r26
+ 32c:	19 92       	st	Y+, r1
+ 32e:	01 50       	subi	r16, 0x01	; 1
+ 330:	10 40       	sbci	r17, 0x00	; 0
+ 332:	e1 f7       	brne	.-8      	; 0x32c <Kernel_Create_Task_At+0x14>
    //by most significant).  This is because the "return" assembly instructions 
    //(rtn and rti) pop addresses off in BIG ENDIAN (most sig. first, least sig. 
    //second), even though the AT90 is LITTLE ENDIAN machine.
 
    //Store terminate at the bottom of stack to protect against stack underrun.
    *(unsigned char *)sp-- = ((unsigned int)Task_Terminate) & 0xff;
- 32c:	e1 50       	subi	r30, 0x01	; 1
- 32e:	ff 4f       	sbci	r31, 0xFF	; 255
- 330:	2b e7       	ldi	r18, 0x7B	; 123
- 332:	31 e0       	ldi	r19, 0x01	; 1
- 334:	20 83       	st	Z, r18
+ 334:	dc 01       	movw	r26, r24
+ 336:	af 5f       	subi	r26, 0xFF	; 255
+ 338:	be 4f       	sbci	r27, 0xFE	; 254
+ 33a:	eb e7       	ldi	r30, 0x7B	; 123
+ 33c:	f1 e0       	ldi	r31, 0x01	; 1
+ 33e:	ec 93       	st	X, r30
    *(unsigned char *)sp-- = (((unsigned int)Task_Terminate) >> 8) & 0xff;
- 336:	31 97       	sbiw	r30, 0x01	; 1
- 338:	30 83       	st	Z, r19
+ 340:	11 97       	sbiw	r26, 0x01	; 1
+ 342:	fc 93       	st	X, r31
 	*(unsigned char *)sp-- = 0x00;
- 33a:	31 97       	sbiw	r30, 0x01	; 1
- 33c:	10 82       	st	Z, r1
+ 344:	fc 01       	movw	r30, r24
+ 346:	e1 50       	subi	r30, 0x01	; 1
+ 348:	ff 4f       	sbci	r31, 0xFF	; 255
+ 34a:	10 82       	st	Z, r1
 
    //Place return address of function at bottom of stack
    *(unsigned char *)sp-- = ((unsigned int)f) & 0xff;
- 33e:	31 97       	sbiw	r30, 0x01	; 1
- 340:	60 83       	st	Z, r22
+ 34c:	31 97       	sbiw	r30, 0x01	; 1
+ 34e:	60 83       	st	Z, r22
    *(unsigned char *)sp-- = (((unsigned int)f) >> 8) & 0xff;
- 342:	31 97       	sbiw	r30, 0x01	; 1
- 344:	70 83       	st	Z, r23
+ 350:	31 97       	sbiw	r30, 0x01	; 1
+ 352:	70 83       	st	Z, r23
 	*(unsigned char *)sp-- = 0x00;
- 346:	31 97       	sbiw	r30, 0x01	; 1
- 348:	10 82       	st	Z, r1
+ 354:	31 97       	sbiw	r30, 0x01	; 1
+ 356:	10 82       	st	Z, r1
 
 	sp = sp - 34;
- 34a:	9c 01       	movw	r18, r24
- 34c:	27 52       	subi	r18, 0x27	; 39
- 34e:	3f 4f       	sbci	r19, 0xFF	; 255
+ 358:	b3 97       	sbiw	r30, 0x23	; 35
    p->sp = sp;		/* stack pointer into the "workSpace" */
- 350:	dc 01       	movw	r26, r24
- 352:	2d 93       	st	X+, r18
- 354:	3c 93       	st	X, r19
+ 35a:	dc 01       	movw	r26, r24
+ 35c:	ed 93       	st	X+, r30
+ 35e:	fc 93       	st	X, r31
    p->code = f;		/* function to be executed as a task */
- 356:	37 96       	adiw	r30, 0x07	; 7
- 358:	60 83       	st	Z, r22
- 35a:	71 83       	std	Z+1, r23	; 0x01
+ 360:	ba 96       	adiw	r30, 0x2a	; 42
+ 362:	60 83       	st	Z, r22
+ 364:	71 83       	std	Z+1, r23	; 0x01
    p->request = NONE;
- 35c:	32 96       	adiw	r30, 0x02	; 2
- 35e:	10 82       	st	Z, r1
+ 366:	32 96       	adiw	r30, 0x02	; 2
+ 368:	10 82       	st	Z, r1
+	p->arg= arg;
+ 36a:	36 96       	adiw	r30, 0x06	; 6
+ 36c:	31 83       	std	Z+1, r19	; 0x01
+ 36e:	20 83       	st	Z, r18
+	p->priority=py;
+ 370:	33 97       	sbiw	r30, 0x03	; 3
+ 372:	40 83       	st	Z, r20
    /*----END of NEW CODE----*/
    p->state = READY;
- 360:	33 97       	sbiw	r30, 0x03	; 3
- 362:	81 e0       	ldi	r24, 0x01	; 1
- 364:	80 83       	st	Z, r24
- 366:	08 95       	ret
+ 374:	36 97       	sbiw	r30, 0x06	; 6
+ 376:	81 e0       	ldi	r24, 0x01	; 1
+ 378:	80 83       	st	Z, r24
 
-00000368 <Kernel_Create_Task>:
+
+}
+ 37a:	df 91       	pop	r29
+ 37c:	cf 91       	pop	r28
+ 37e:	1f 91       	pop	r17
+ 380:	0f 91       	pop	r16
+ 382:	08 95       	ret
+
+00000384 <Kernel_Create_Task>:
 
 /**
   *  Create a new task
   */
-static void Kernel_Create_Task( voidfuncptr f ) 
+static void Kernel_Create_Task( voidfuncptr f , PRIORITY py, int arg) 
 {
- 368:	bc 01       	movw	r22, r24
+ 384:	cf 93       	push	r28
+ 386:	df 93       	push	r29
+ 388:	ec 01       	movw	r28, r24
    int x;
 
    if (Tasks == MAXPROCESS) return;  /* Too many task! */
- 36a:	80 91 00 02 	lds	r24, 0x0200
- 36e:	90 91 01 02 	lds	r25, 0x0201
- 372:	08 97       	sbiw	r24, 0x08	; 8
- 374:	51 f1       	breq	.+84     	; 0x3ca <Kernel_Create_Task+0x62>
+ 38a:	80 91 00 02 	lds	r24, 0x0200
+ 38e:	90 91 01 02 	lds	r25, 0x0201
+ 392:	08 97       	sbiw	r24, 0x08	; 8
+ 394:	61 f1       	breq	.+88     	; 0x3ee <Kernel_Create_Task+0x6a>
 
    /* find a DEAD PD that we can use  */
    for (x = 0; x < MAXPROCESS; x++) {
        if (Process[x].state == DEAD) break;
- 376:	80 91 0a 03 	lds	r24, 0x030A
- 37a:	88 23       	and	r24, r24
- 37c:	79 f0       	breq	.+30     	; 0x39c <Kernel_Create_Task+0x34>
- 37e:	e7 e1       	ldi	r30, 0x17	; 23
- 380:	f4 e0       	ldi	r31, 0x04	; 4
-   int x;
-
-   if (Tasks == MAXPROCESS) return;  /* Too many task! */
-
-   /* find a DEAD PD that we can use  */
-   for (x = 0; x < MAXPROCESS; x++) {
- 382:	21 e0       	ldi	r18, 0x01	; 1
- 384:	30 e0       	ldi	r19, 0x00	; 0
-       if (Process[x].state == DEAD) break;
- 386:	90 81       	ld	r25, Z
- 388:	99 23       	and	r25, r25
- 38a:	51 f0       	breq	.+20     	; 0x3a0 <Kernel_Create_Task+0x38>
+ 396:	80 91 0a 03 	lds	r24, 0x030A
+ 39a:	88 23       	and	r24, r24
+ 39c:	71 f0       	breq	.+28     	; 0x3ba <Kernel_Create_Task+0x36>
+ 39e:	a9 e1       	ldi	r26, 0x19	; 25
+ 3a0:	b4 e0       	ldi	r27, 0x04	; 4
    int x;
 
    if (Tasks == MAXPROCESS) return;  /* Too many task! */
 
    /* find a DEAD PD that we can use  */
    for (x = 0; x < MAXPROCESS; x++) {
- 38c:	2f 5f       	subi	r18, 0xFF	; 255
- 38e:	3f 4f       	sbci	r19, 0xFF	; 255
- 390:	e3 5f       	subi	r30, 0xF3	; 243
- 392:	fe 4f       	sbci	r31, 0xFE	; 254
- 394:	28 30       	cpi	r18, 0x08	; 8
- 396:	31 05       	cpc	r19, r1
- 398:	b1 f7       	brne	.-20     	; 0x386 <Kernel_Create_Task+0x1e>
- 39a:	02 c0       	rjmp	.+4      	; 0x3a0 <Kernel_Create_Task+0x38>
+ 3a2:	e1 e0       	ldi	r30, 0x01	; 1
+ 3a4:	f0 e0       	ldi	r31, 0x00	; 0
        if (Process[x].state == DEAD) break;
- 39c:	20 e0       	ldi	r18, 0x00	; 0
- 39e:	30 e0       	ldi	r19, 0x00	; 0
+ 3a6:	9c 91       	ld	r25, X
+ 3a8:	99 23       	and	r25, r25
+ 3aa:	49 f0       	breq	.+18     	; 0x3be <Kernel_Create_Task+0x3a>
+   int x;
+
+   if (Tasks == MAXPROCESS) return;  /* Too many task! */
+
+   /* find a DEAD PD that we can use  */
+   for (x = 0; x < MAXPROCESS; x++) {
+ 3ac:	31 96       	adiw	r30, 0x01	; 1
+ 3ae:	a1 5f       	subi	r26, 0xF1	; 241
+ 3b0:	be 4f       	sbci	r27, 0xFE	; 254
+ 3b2:	e8 30       	cpi	r30, 0x08	; 8
+ 3b4:	f1 05       	cpc	r31, r1
+ 3b6:	b9 f7       	brne	.-18     	; 0x3a6 <Kernel_Create_Task+0x22>
+ 3b8:	02 c0       	rjmp	.+4      	; 0x3be <Kernel_Create_Task+0x3a>
+       if (Process[x].state == DEAD) break;
+ 3ba:	e0 e0       	ldi	r30, 0x00	; 0
+ 3bc:	f0 e0       	ldi	r31, 0x00	; 0
+ 3be:	9a 01       	movw	r18, r20
+ 3c0:	46 2f       	mov	r20, r22
+ 3c2:	be 01       	movw	r22, r28
    }
 
    ++Tasks;
- 3a0:	80 91 00 02 	lds	r24, 0x0200
- 3a4:	90 91 01 02 	lds	r25, 0x0201
- 3a8:	01 96       	adiw	r24, 0x01	; 1
- 3aa:	90 93 01 02 	sts	0x0201, r25
- 3ae:	80 93 00 02 	sts	0x0200, r24
-   Kernel_Create_Task_At( &(Process[x]), f );
- 3b2:	4d e0       	ldi	r20, 0x0D	; 13
- 3b4:	51 e0       	ldi	r21, 0x01	; 1
- 3b6:	24 9f       	mul	r18, r20
- 3b8:	c0 01       	movw	r24, r0
- 3ba:	25 9f       	mul	r18, r21
- 3bc:	90 0d       	add	r25, r0
- 3be:	34 9f       	mul	r19, r20
- 3c0:	90 0d       	add	r25, r0
- 3c2:	11 24       	eor	r1, r1
- 3c4:	88 5f       	subi	r24, 0xF8	; 248
- 3c6:	9d 4f       	sbci	r25, 0xFD	; 253
- 3c8:	a7 cf       	rjmp	.-178    	; 0x318 <Kernel_Create_Task_At>
- 3ca:	08 95       	ret
+ 3c4:	80 91 00 02 	lds	r24, 0x0200
+ 3c8:	90 91 01 02 	lds	r25, 0x0201
+ 3cc:	01 96       	adiw	r24, 0x01	; 1
+ 3ce:	90 93 01 02 	sts	0x0201, r25
+ 3d2:	80 93 00 02 	sts	0x0200, r24
+   Kernel_Create_Task_At( &(Process[x]), f ,py, arg);
+ 3d6:	af e0       	ldi	r26, 0x0F	; 15
+ 3d8:	b1 e0       	ldi	r27, 0x01	; 1
+ 3da:	ea 9f       	mul	r30, r26
+ 3dc:	c0 01       	movw	r24, r0
+ 3de:	eb 9f       	mul	r30, r27
+ 3e0:	90 0d       	add	r25, r0
+ 3e2:	fa 9f       	mul	r31, r26
+ 3e4:	90 0d       	add	r25, r0
+ 3e6:	11 24       	eor	r1, r1
+ 3e8:	88 5f       	subi	r24, 0xF8	; 248
+ 3ea:	9d 4f       	sbci	r25, 0xFD	; 253
+ 3ec:	95 df       	rcall	.-214    	; 0x318 <Kernel_Create_Task_At>
 
-000003cc <set_timer>:
+}
+ 3ee:	df 91       	pop	r29
+ 3f0:	cf 91       	pop	r28
+ 3f2:	08 95       	ret
+
+000003f4 <set_timer>:
     } 
 }
 
 void set_timer()
 {
 	TCCR1A = 0;
- 3cc:	10 92 80 00 	sts	0x0080, r1
+ 3f4:	10 92 80 00 	sts	0x0080, r1
 	TCCR1B = 0;
- 3d0:	e1 e8       	ldi	r30, 0x81	; 129
- 3d2:	f0 e0       	ldi	r31, 0x00	; 0
- 3d4:	10 82       	st	Z, r1
+ 3f8:	e1 e8       	ldi	r30, 0x81	; 129
+ 3fa:	f0 e0       	ldi	r31, 0x00	; 0
+ 3fc:	10 82       	st	Z, r1
 	//Set to CTC (mode 4)
 	TCCR1B |= (1<<WGM32);
- 3d6:	80 81       	ld	r24, Z
- 3d8:	88 60       	ori	r24, 0x08	; 8
- 3da:	80 83       	st	Z, r24
+ 3fe:	80 81       	ld	r24, Z
+ 400:	88 60       	ori	r24, 0x08	; 8
+ 402:	80 83       	st	Z, r24
 	
 	//Set prescaler /8
 	TCCR1B |= (1<<CS31);
- 3dc:	80 81       	ld	r24, Z
- 3de:	82 60       	ori	r24, 0x02	; 2
- 3e0:	80 83       	st	Z, r24
+ 404:	80 81       	ld	r24, Z
+ 406:	82 60       	ori	r24, 0x02	; 2
+ 408:	80 83       	st	Z, r24
 	
 	//Set TOP value (0.01 seconds)
 	OCR1A = 20000;
- 3e2:	80 e2       	ldi	r24, 0x20	; 32
- 3e4:	9e e4       	ldi	r25, 0x4E	; 78
- 3e6:	90 93 89 00 	sts	0x0089, r25
- 3ea:	80 93 88 00 	sts	0x0088, r24
+ 40a:	80 e2       	ldi	r24, 0x20	; 32
+ 40c:	9e e4       	ldi	r25, 0x4E	; 78
+ 40e:	90 93 89 00 	sts	0x0089, r25
+ 412:	80 93 88 00 	sts	0x0088, r24
 	
 	//Enable interupt A for timer 3.
 	TIMSK1 |= (1<<OCIE1A);
- 3ee:	ef e6       	ldi	r30, 0x6F	; 111
- 3f0:	f0 e0       	ldi	r31, 0x00	; 0
- 3f2:	80 81       	ld	r24, Z
- 3f4:	82 60       	ori	r24, 0x02	; 2
- 3f6:	80 83       	st	Z, r24
- 3f8:	08 95       	ret
+ 416:	ef e6       	ldi	r30, 0x6F	; 111
+ 418:	f0 e0       	ldi	r31, 0x00	; 0
+ 41a:	80 81       	ld	r24, Z
+ 41c:	82 60       	ori	r24, 0x02	; 2
+ 41e:	80 83       	st	Z, r24
+ 420:	08 95       	ret
 
-000003fa <OS_Init>:
+00000422 <OS_Init>:
+/**
+  * This function initializes the RTOS and must be called before any other
   * system calls.
   */
 void OS_Init() 
 {
+ 422:	cf 93       	push	r28
+ 424:	df 93       	push	r29
 
 	DDRA= (1<<PA0);
- 3fa:	81 e0       	ldi	r24, 0x01	; 1
- 3fc:	81 b9       	out	0x01, r24	; 1
+ 426:	81 e0       	ldi	r24, 0x01	; 1
+ 428:	81 b9       	out	0x01, r24	; 1
 	DDRA = (1<<PA1);
- 3fe:	82 e0       	ldi	r24, 0x02	; 2
- 400:	81 b9       	out	0x01, r24	; 1
+ 42a:	82 e0       	ldi	r24, 0x02	; 2
+ 42c:	81 b9       	out	0x01, r24	; 1
 	PORTA &= ~(1<<PA0);
- 402:	10 98       	cbi	0x02, 0	; 2
+ 42e:	10 98       	cbi	0x02, 0	; 2
 	PORTA &= ~(1<<PA1);
- 404:	11 98       	cbi	0x02, 1	; 2
+ 430:	11 98       	cbi	0x02, 1	; 2
 	
 	
 	set_timer();
- 406:	e2 df       	rcall	.-60     	; 0x3cc <set_timer>
+ 432:	e0 df       	rcall	.-64     	; 0x3f4 <set_timer>
 	
    int x;
 
    Tasks = 0;
- 408:	10 92 01 02 	sts	0x0201, r1
- 40c:	10 92 00 02 	sts	0x0200, r1
+ 434:	10 92 01 02 	sts	0x0201, r1
+ 438:	10 92 00 02 	sts	0x0200, r1
    KernelActive = 0;
- 410:	10 92 03 02 	sts	0x0203, r1
- 414:	10 92 02 02 	sts	0x0202, r1
+ 43c:	10 92 03 02 	sts	0x0203, r1
+ 440:	10 92 02 02 	sts	0x0202, r1
    NextP = 0;
- 418:	10 92 05 02 	sts	0x0205, r1
- 41c:	10 92 04 02 	sts	0x0204, r1
- 420:	08 95       	ret
+ 444:	10 92 05 02 	sts	0x0205, r1
+ 448:	10 92 04 02 	sts	0x0204, r1
+ 44c:	ea e0       	ldi	r30, 0x0A	; 10
+ 44e:	f3 e0       	ldi	r31, 0x03	; 3
+ 450:	42 e8       	ldi	r20, 0x82	; 130
+ 452:	5b e0       	ldi	r21, 0x0B	; 11
+	//Reminder: Clear the memory for the task on creation.
+   for (x = 0; x < MAXPROCESS; x++) {
+      memset(&(Process[x]),0,sizeof(PD));
+ 454:	2f e0       	ldi	r18, 0x0F	; 15
+ 456:	31 e0       	ldi	r19, 0x01	; 1
+ 458:	df 01       	movw	r26, r30
+ 45a:	a2 50       	subi	r26, 0x02	; 2
+ 45c:	b1 40       	sbci	r27, 0x01	; 1
+ 45e:	ed 01       	movw	r28, r26
+ 460:	c9 01       	movw	r24, r18
+ 462:	19 92       	st	Y+, r1
+ 464:	01 97       	sbiw	r24, 0x01	; 1
+ 466:	e9 f7       	brne	.-6      	; 0x462 <OS_Init+0x40>
+      Process[x].state = DEAD;
+ 468:	10 82       	st	Z, r1
+ 46a:	cf 01       	movw	r24, r30
+ 46c:	0d 96       	adiw	r24, 0x0d	; 13
+		Process[x].next=&Process[x+1];
+ 46e:	94 87       	std	Z+12, r25	; 0x0c
+ 470:	83 87       	std	Z+11, r24	; 0x0b
+ 472:	e1 5f       	subi	r30, 0xF1	; 241
+ 474:	fe 4f       	sbci	r31, 0xFE	; 254
 
-00000422 <OS_Start>:
+   Tasks = 0;
+   KernelActive = 0;
+   NextP = 0;
+	//Reminder: Clear the memory for the task on creation.
+   for (x = 0; x < MAXPROCESS; x++) {
+ 476:	e4 17       	cp	r30, r20
+ 478:	f5 07       	cpc	r31, r21
+ 47a:	71 f7       	brne	.-36     	; 0x458 <OS_Init+0x36>
+      memset(&(Process[x]),0,sizeof(PD));
+      Process[x].state = DEAD;
+		Process[x].next=&Process[x+1];
+   }
+
+}
+ 47c:	df 91       	pop	r29
+ 47e:	cf 91       	pop	r28
+ 480:	08 95       	ret
+
+00000482 <OS_Start>:
 
 /**
   * This function starts the RTOS after creating a few tasks.
   */
 void OS_Start() 
 {   
- 422:	cf 93       	push	r28
+ 482:	cf 93       	push	r28
    if ( (! KernelActive) && (Tasks > 0)) {
- 424:	80 91 02 02 	lds	r24, 0x0202
- 428:	90 91 03 02 	lds	r25, 0x0203
- 42c:	89 2b       	or	r24, r25
- 42e:	09 f0       	breq	.+2      	; 0x432 <OS_Start+0x10>
- 430:	3e c0       	rjmp	.+124    	; 0x4ae <OS_Start+0x8c>
- 432:	80 91 00 02 	lds	r24, 0x0200
- 436:	90 91 01 02 	lds	r25, 0x0201
- 43a:	89 2b       	or	r24, r25
- 43c:	c1 f1       	breq	.+112    	; 0x4ae <OS_Start+0x8c>
+ 484:	80 91 02 02 	lds	r24, 0x0202
+ 488:	90 91 03 02 	lds	r25, 0x0203
+ 48c:	89 2b       	or	r24, r25
+ 48e:	09 f0       	breq	.+2      	; 0x492 <OS_Start+0x10>
+ 490:	45 c0       	rjmp	.+138    	; 0x51c <OS_Start+0x9a>
+ 492:	80 91 00 02 	lds	r24, 0x0200
+ 496:	90 91 01 02 	lds	r25, 0x0201
+ 49a:	89 2b       	or	r24, r25
+ 49c:	09 f4       	brne	.+2      	; 0x4a0 <OS_Start+0x1e>
+ 49e:	3e c0       	rjmp	.+124    	; 0x51c <OS_Start+0x9a>
        Disable_Interrupt();
- 43e:	f8 94       	cli
+ 4a0:	f8 94       	cli
       /* we may have to initialize the interrupt vector for Enter_Kernel() here. */
 
       /* here we go...  */
       KernelActive = 1;
- 440:	81 e0       	ldi	r24, 0x01	; 1
- 442:	90 e0       	ldi	r25, 0x00	; 0
- 444:	90 93 03 02 	sts	0x0203, r25
- 448:	80 93 02 02 	sts	0x0202, r24
+ 4a2:	81 e0       	ldi	r24, 0x01	; 1
+ 4a4:	90 e0       	ldi	r25, 0x00	; 0
+ 4a6:	90 93 03 02 	sts	0x0203, r25
+ 4aa:	80 93 02 02 	sts	0x0202, r24
   *
   * This is the main loop of our kernel, called by OS_Start().
   */
 static void Next_Kernel_Request() 
 {
    Dispatch();  /* select a new task to run */
- 44c:	0c df       	rcall	.-488    	; 0x266 <Dispatch>
+ 4ae:	db de       	rcall	.-586    	; 0x266 <Dispatch>
        case CREATE:
-           Kernel_Create_Task( Cp->code );
+           Kernel_Create_Task( Cp->code , Cp->priority, Cp->arg );
            break;
        case NEXT:
 		 //Enqueue appropriately
 		   Cp->state = READY;
- 44e:	c1 e0       	ldi	r28, 0x01	; 1
+ 4b0:	c1 e0       	ldi	r28, 0x01	; 1
    Dispatch();  /* select a new task to run */
 
    while(1) {
 
        /* activate this newly selected task */
        CurrentSp = Cp->sp;
- 450:	e0 91 06 02 	lds	r30, 0x0206
- 454:	f0 91 07 02 	lds	r31, 0x0207
- 458:	80 81       	ld	r24, Z
- 45a:	91 81       	ldd	r25, Z+1	; 0x01
- 45c:	90 93 71 0a 	sts	0x0A71, r25
- 460:	80 93 70 0a 	sts	0x0A70, r24
+ 4b2:	e0 91 06 02 	lds	r30, 0x0206
+ 4b6:	f0 91 07 02 	lds	r31, 0x0207
+ 4ba:	80 81       	ld	r24, Z
+ 4bc:	91 81       	ldd	r25, Z+1	; 0x01
+ 4be:	90 93 81 0a 	sts	0x0A81, r25
+ 4c2:	80 93 80 0a 	sts	0x0A80, r24
        Exit_Kernel();    /* or CSwitch() */
- 464:	52 de       	rcall	.-860    	; 0x10a <CSwitch>
+ 4c6:	21 de       	rcall	.-958    	; 0x10a <CSwitch>
 
        /* if this task makes a system call, it will return to here! */
 
         /* save the Cp's stack pointer */
        Cp->sp = CurrentSp;
- 466:	e0 91 06 02 	lds	r30, 0x0206
- 46a:	f0 91 07 02 	lds	r31, 0x0207
- 46e:	80 91 70 0a 	lds	r24, 0x0A70
- 472:	90 91 71 0a 	lds	r25, 0x0A71
- 476:	91 83       	std	Z+1, r25	; 0x01
- 478:	80 83       	st	Z, r24
+ 4c8:	e0 91 06 02 	lds	r30, 0x0206
+ 4cc:	f0 91 07 02 	lds	r31, 0x0207
+ 4d0:	80 91 80 0a 	lds	r24, 0x0A80
+ 4d4:	90 91 81 0a 	lds	r25, 0x0A81
+ 4d8:	91 83       	std	Z+1, r25	; 0x01
+ 4da:	80 83       	st	Z, r24
 
        switch(Cp->request){
- 47a:	df 01       	movw	r26, r30
- 47c:	ab 5f       	subi	r26, 0xFB	; 251
- 47e:	be 4f       	sbci	r27, 0xFE	; 254
- 480:	8c 91       	ld	r24, X
- 482:	82 30       	cpi	r24, 0x02	; 2
- 484:	51 f0       	breq	.+20     	; 0x49a <OS_Start+0x78>
- 486:	83 30       	cpi	r24, 0x03	; 3
- 488:	69 f0       	breq	.+26     	; 0x4a4 <OS_Start+0x82>
- 48a:	81 30       	cpi	r24, 0x01	; 1
- 48c:	09 f7       	brne	.-62     	; 0x450 <OS_Start+0x2e>
+ 4dc:	df 01       	movw	r26, r30
+ 4de:	ab 5f       	subi	r26, 0xFB	; 251
+ 4e0:	be 4f       	sbci	r27, 0xFE	; 254
+ 4e2:	8c 91       	ld	r24, X
+ 4e4:	82 30       	cpi	r24, 0x02	; 2
+ 4e6:	81 f0       	breq	.+32     	; 0x508 <OS_Start+0x86>
+ 4e8:	83 30       	cpi	r24, 0x03	; 3
+ 4ea:	99 f0       	breq	.+38     	; 0x512 <OS_Start+0x90>
+ 4ec:	81 30       	cpi	r24, 0x01	; 1
+ 4ee:	09 f7       	brne	.-62     	; 0x4b2 <OS_Start+0x30>
        case CREATE:
-           Kernel_Create_Task( Cp->code );
- 48e:	ed 5f       	subi	r30, 0xFD	; 253
- 490:	fe 4f       	sbci	r31, 0xFE	; 254
- 492:	80 81       	ld	r24, Z
- 494:	91 81       	ldd	r25, Z+1	; 0x01
- 496:	68 df       	rcall	.-304    	; 0x368 <Kernel_Create_Task>
- 498:	db cf       	rjmp	.-74     	; 0x450 <OS_Start+0x2e>
+           Kernel_Create_Task( Cp->code , Cp->priority, Cp->arg );
+ 4f0:	16 96       	adiw	r26, 0x06	; 6
+ 4f2:	4d 91       	ld	r20, X+
+ 4f4:	5c 91       	ld	r21, X
+ 4f6:	11 97       	sbiw	r26, 0x01	; 1
+ 4f8:	13 97       	sbiw	r26, 0x03	; 3
+ 4fa:	6c 91       	ld	r22, X
+ 4fc:	ed 5f       	subi	r30, 0xFD	; 253
+ 4fe:	fe 4f       	sbci	r31, 0xFE	; 254
+ 500:	80 81       	ld	r24, Z
+ 502:	91 81       	ldd	r25, Z+1	; 0x01
+ 504:	3f df       	rcall	.-386    	; 0x384 <Kernel_Create_Task>
+ 506:	d5 cf       	rjmp	.-86     	; 0x4b2 <OS_Start+0x30>
            break;
        case NEXT:
 		 //Enqueue appropriately
 		   Cp->state = READY;
- 49a:	ee 5f       	subi	r30, 0xFE	; 254
- 49c:	fe 4f       	sbci	r31, 0xFE	; 254
- 49e:	c0 83       	st	Z, r28
+ 508:	ee 5f       	subi	r30, 0xFE	; 254
+ 50a:	fe 4f       	sbci	r31, 0xFE	; 254
+ 50c:	c0 83       	st	Z, r28
 			Dispatch();
- 4a0:	e2 de       	rcall	.-572    	; 0x266 <Dispatch>
- 4a2:	d6 cf       	rjmp	.-84     	; 0x450 <OS_Start+0x2e>
+ 50e:	ab de       	rcall	.-682    	; 0x266 <Dispatch>
+ 510:	d0 cf       	rjmp	.-96     	; 0x4b2 <OS_Start+0x30>
 	   case NONE:
 	//shouldn't happen
           break;
        case TERMINATE:
           /* deallocate all resources used by this task */
           Cp->state = DEAD;
- 4a4:	ee 5f       	subi	r30, 0xFE	; 254
- 4a6:	fe 4f       	sbci	r31, 0xFE	; 254
- 4a8:	10 82       	st	Z, r1
+ 512:	ee 5f       	subi	r30, 0xFE	; 254
+ 514:	fe 4f       	sbci	r31, 0xFE	; 254
+ 516:	10 82       	st	Z, r1
           Dispatch();
- 4aa:	dd de       	rcall	.-582    	; 0x266 <Dispatch>
- 4ac:	d1 cf       	rjmp	.-94     	; 0x450 <OS_Start+0x2e>
+ 518:	a6 de       	rcall	.-692    	; 0x266 <Dispatch>
+ 51a:	cb cf       	rjmp	.-106    	; 0x4b2 <OS_Start+0x30>
       /* here we go...  */
       KernelActive = 1;
       Next_Kernel_Request();
       /* NEVER RETURNS!!! */
    }
 }
- 4ae:	cf 91       	pop	r28
- 4b0:	08 95       	ret
+ 51c:	cf 91       	pop	r28
+ 51e:	08 95       	ret
 
-000004b2 <Task_Create>:
+00000520 <Task_Create>:
   * each task gives up its share of the processor voluntarily by calling
   * Task_Next().
   */
-void Task_Create( voidfuncptr f)
+PID Task_Create( voidfuncptr f, PRIORITY py, int arg)
 {
    if (KernelActive ) {
- 4b2:	20 91 02 02 	lds	r18, 0x0202
- 4b6:	30 91 03 02 	lds	r19, 0x0203
- 4ba:	23 2b       	or	r18, r19
- 4bc:	79 f0       	breq	.+30     	; 0x4dc <Task_Create+0x2a>
+ 520:	20 91 02 02 	lds	r18, 0x0202
+ 524:	30 91 03 02 	lds	r19, 0x0203
+ 528:	23 2b       	or	r18, r19
+ 52a:	e1 f0       	breq	.+56     	; 0x564 <Task_Create+0x44>
      Disable_Interrupt();
- 4be:	f8 94       	cli
+ 52c:	f8 94       	cli
      Cp ->request = CREATE;
- 4c0:	20 91 06 02 	lds	r18, 0x0206
- 4c4:	30 91 07 02 	lds	r19, 0x0207
- 4c8:	f9 01       	movw	r30, r18
- 4ca:	eb 5f       	subi	r30, 0xFB	; 251
- 4cc:	fe 4f       	sbci	r31, 0xFE	; 254
- 4ce:	41 e0       	ldi	r20, 0x01	; 1
- 4d0:	40 83       	st	Z, r20
+ 52e:	20 91 06 02 	lds	r18, 0x0206
+ 532:	30 91 07 02 	lds	r19, 0x0207
+ 536:	f9 01       	movw	r30, r18
+ 538:	eb 5f       	subi	r30, 0xFB	; 251
+ 53a:	fe 4f       	sbci	r31, 0xFE	; 254
+ 53c:	71 e0       	ldi	r23, 0x01	; 1
+ 53e:	70 83       	st	Z, r23
      Cp->code = f;
- 4d2:	32 97       	sbiw	r30, 0x02	; 2
- 4d4:	91 83       	std	Z+1, r25	; 0x01
- 4d6:	80 83       	st	Z, r24
+ 540:	32 97       	sbiw	r30, 0x02	; 2
+ 542:	91 83       	std	Z+1, r25	; 0x01
+ 544:	80 83       	st	Z, r24
+	  Cp->arg=arg;
+ 546:	38 96       	adiw	r30, 0x08	; 8
+ 548:	51 83       	std	Z+1, r21	; 0x01
+ 54a:	40 83       	st	Z, r20
+	  Cp->priority=py;
+ 54c:	33 97       	sbiw	r30, 0x03	; 3
+ 54e:	60 83       	st	Z, r22
      Enter_Kernel();
- 4d8:	6f ce       	rjmp	.-802    	; 0x1b8 <Enter_Kernel>
- 4da:	08 95       	ret
+ 550:	33 de       	rcall	.-922    	; 0x1b8 <Enter_Kernel>
+	  return Cp->pid;
+ 552:	e0 91 06 02 	lds	r30, 0x0206
+ 556:	f0 91 07 02 	lds	r31, 0x0207
+ 55a:	e7 5f       	subi	r30, 0xF7	; 247
+ 55c:	fe 4f       	sbci	r31, 0xFE	; 254
+ 55e:	80 81       	ld	r24, Z
+ 560:	91 81       	ldd	r25, Z+1	; 0x01
+ 562:	08 95       	ret
    } else { 
       /* call the RTOS function directly */
-      Kernel_Create_Task( f );
- 4dc:	45 cf       	rjmp	.-374    	; 0x368 <Kernel_Create_Task>
- 4de:	08 95       	ret
+      Kernel_Create_Task( f,py,arg );
+ 564:	0f df       	rcall	.-482    	; 0x384 <Kernel_Create_Task>
+		return Cp->pid;
+ 566:	e0 91 06 02 	lds	r30, 0x0206
+ 56a:	f0 91 07 02 	lds	r31, 0x0207
+ 56e:	e7 5f       	subi	r30, 0xF7	; 247
+ 570:	fe 4f       	sbci	r31, 0xFE	; 254
+ 572:	80 81       	ld	r24, Z
+ 574:	91 81       	ldd	r25, Z+1	; 0x01
+   }
+}
+ 576:	08 95       	ret
 
-000004e0 <Task_Next>:
+00000578 <Task_Next>:
 /**
   * The calling task gives up its share of the processor voluntarily.
   */
 void Task_Next() 
 {
    if (KernelActive) {
- 4e0:	80 91 02 02 	lds	r24, 0x0202
- 4e4:	90 91 03 02 	lds	r25, 0x0203
- 4e8:	89 2b       	or	r24, r25
- 4ea:	51 f0       	breq	.+20     	; 0x500 <Task_Next+0x20>
+ 578:	80 91 02 02 	lds	r24, 0x0202
+ 57c:	90 91 03 02 	lds	r25, 0x0203
+ 580:	89 2b       	or	r24, r25
+ 582:	51 f0       	breq	.+20     	; 0x598 <Task_Next+0x20>
      Disable_Interrupt();
- 4ec:	f8 94       	cli
+ 584:	f8 94       	cli
      Cp ->request = NEXT;
- 4ee:	e0 91 06 02 	lds	r30, 0x0206
- 4f2:	f0 91 07 02 	lds	r31, 0x0207
- 4f6:	eb 5f       	subi	r30, 0xFB	; 251
- 4f8:	fe 4f       	sbci	r31, 0xFE	; 254
- 4fa:	82 e0       	ldi	r24, 0x02	; 2
- 4fc:	80 83       	st	Z, r24
+ 586:	e0 91 06 02 	lds	r30, 0x0206
+ 58a:	f0 91 07 02 	lds	r31, 0x0207
+ 58e:	eb 5f       	subi	r30, 0xFB	; 251
+ 590:	fe 4f       	sbci	r31, 0xFE	; 254
+ 592:	82 e0       	ldi	r24, 0x02	; 2
+ 594:	80 83       	st	Z, r24
      Enter_Kernel();
- 4fe:	5c ce       	rjmp	.-840    	; 0x1b8 <Enter_Kernel>
- 500:	08 95       	ret
+ 596:	10 ce       	rjmp	.-992    	; 0x1b8 <Enter_Kernel>
+ 598:	08 95       	ret
 
-00000502 <Ping>:
+0000059a <Ping>:
 void Ping() 
 {
 	int x;
   for(;;){
 
 	PORTA &= ~(1<<PA1);
- 502:	d0 e0       	ldi	r29, 0x00	; 0
- 504:	cd e7       	ldi	r28, 0x7D	; 125
- 506:	11 98       	cbi	0x02, 1	; 2
- 508:	8d 2f       	mov	r24, r29
- 50a:	9c 2f       	mov	r25, r28
- 50c:	01 97       	sbiw	r24, 0x01	; 1
+ 59a:	d0 e0       	ldi	r29, 0x00	; 0
+ 59c:	cd e7       	ldi	r28, 0x7D	; 125
+ 59e:	11 98       	cbi	0x02, 1	; 2
+ 5a0:	8d 2f       	mov	r24, r29
+ 5a2:	9c 2f       	mov	r25, r28
+ 5a4:	01 97       	sbiw	r24, 0x01	; 1
 	for(x=0;x<32000;x++);
- 50e:	f1 f7       	brne	.-4      	; 0x50c <Ping+0xa>
- 510:	8d 2f       	mov	r24, r29
- 512:	9c 2f       	mov	r25, r28
- 514:	01 97       	sbiw	r24, 0x01	; 1
+ 5a6:	f1 f7       	brne	.-4      	; 0x5a4 <Ping+0xa>
+ 5a8:	8d 2f       	mov	r24, r29
+ 5aa:	9c 2f       	mov	r25, r28
+ 5ac:	01 97       	sbiw	r24, 0x01	; 1
 	for(x=0;x<32000;x++);
- 516:	f1 f7       	brne	.-4      	; 0x514 <Ping+0x12>
- 518:	8d 2f       	mov	r24, r29
- 51a:	9c 2f       	mov	r25, r28
- 51c:	01 97       	sbiw	r24, 0x01	; 1
+ 5ae:	f1 f7       	brne	.-4      	; 0x5ac <Ping+0x12>
+ 5b0:	8d 2f       	mov	r24, r29
+ 5b2:	9c 2f       	mov	r25, r28
+ 5b4:	01 97       	sbiw	r24, 0x01	; 1
 	for(x=0;x<32000;x++);
- 51e:	f1 f7       	brne	.-4      	; 0x51c <Ping+0x1a>
- 520:	8d 2f       	mov	r24, r29
- 522:	9c 2f       	mov	r25, r28
- 524:	01 97       	sbiw	r24, 0x01	; 1
+ 5b6:	f1 f7       	brne	.-4      	; 0x5b4 <Ping+0x1a>
+ 5b8:	8d 2f       	mov	r24, r29
+ 5ba:	9c 2f       	mov	r25, r28
+ 5bc:	01 97       	sbiw	r24, 0x01	; 1
 	for(x=0;x<32000;x++);
- 526:	f1 f7       	brne	.-4      	; 0x524 <Ping+0x22>
+ 5be:	f1 f7       	brne	.-4      	; 0x5bc <Ping+0x22>
 	Task_Next();
- 528:	db df       	rcall	.-74     	; 0x4e0 <Task_Next>
+ 5c0:	db df       	rcall	.-74     	; 0x578 <Task_Next>
   }
- 52a:	ed cf       	rjmp	.-38     	; 0x506 <Ping+0x4>
+ 5c2:	ed cf       	rjmp	.-38     	; 0x59e <Ping+0x4>
 
-0000052c <Pong>:
+000005c4 <Pong>:
 	int x;
   for(;;) {
 	//LED on
 
 	//LED off
 	PORTA |= (1<<PA1); 
- 52c:	d0 e0       	ldi	r29, 0x00	; 0
- 52e:	cd e7       	ldi	r28, 0x7D	; 125
- 530:	11 9a       	sbi	0x02, 1	; 2
- 532:	8d 2f       	mov	r24, r29
- 534:	9c 2f       	mov	r25, r28
- 536:	01 97       	sbiw	r24, 0x01	; 1
+ 5c4:	d0 e0       	ldi	r29, 0x00	; 0
+ 5c6:	cd e7       	ldi	r28, 0x7D	; 125
+ 5c8:	11 9a       	sbi	0x02, 1	; 2
+ 5ca:	8d 2f       	mov	r24, r29
+ 5cc:	9c 2f       	mov	r25, r28
+ 5ce:	01 97       	sbiw	r24, 0x01	; 1
 		for(x=0;x<32000;x++);
- 538:	f1 f7       	brne	.-4      	; 0x536 <Pong+0xa>
- 53a:	8d 2f       	mov	r24, r29
- 53c:	9c 2f       	mov	r25, r28
- 53e:	01 97       	sbiw	r24, 0x01	; 1
+ 5d0:	f1 f7       	brne	.-4      	; 0x5ce <Pong+0xa>
+ 5d2:	8d 2f       	mov	r24, r29
+ 5d4:	9c 2f       	mov	r25, r28
+ 5d6:	01 97       	sbiw	r24, 0x01	; 1
 		for(x=0;x<32000;x++);
- 540:	f1 f7       	brne	.-4      	; 0x53e <Pong+0x12>
- 542:	8d 2f       	mov	r24, r29
- 544:	9c 2f       	mov	r25, r28
- 546:	01 97       	sbiw	r24, 0x01	; 1
+ 5d8:	f1 f7       	brne	.-4      	; 0x5d6 <Pong+0x12>
+ 5da:	8d 2f       	mov	r24, r29
+ 5dc:	9c 2f       	mov	r25, r28
+ 5de:	01 97       	sbiw	r24, 0x01	; 1
 		for(x=0;x<32000;x++);
- 548:	f1 f7       	brne	.-4      	; 0x546 <Pong+0x1a>
- 54a:	8d 2f       	mov	r24, r29
- 54c:	9c 2f       	mov	r25, r28
- 54e:	01 97       	sbiw	r24, 0x01	; 1
+ 5e0:	f1 f7       	brne	.-4      	; 0x5de <Pong+0x1a>
+ 5e2:	8d 2f       	mov	r24, r29
+ 5e4:	9c 2f       	mov	r25, r28
+ 5e6:	01 97       	sbiw	r24, 0x01	; 1
 		for(x=0;x<32000;x++);
- 550:	f1 f7       	brne	.-4      	; 0x54e <Pong+0x22>
+ 5e8:	f1 f7       	brne	.-4      	; 0x5e6 <Pong+0x22>
 	
 	Task_Next();
- 552:	c6 df       	rcall	.-116    	; 0x4e0 <Task_Next>
+ 5ea:	c6 df       	rcall	.-116    	; 0x578 <Task_Next>
   }
- 554:	ed cf       	rjmp	.-38     	; 0x530 <Pong+0x4>
+ 5ec:	ed cf       	rjmp	.-38     	; 0x5c8 <Pong+0x4>
 
-00000556 <__vector_17>:
+000005ee <__vector_17>:
 }
 
 
 ISR(TIMER1_COMPA_vect)
 {
- 556:	1f 92       	push	r1
- 558:	0f 92       	push	r0
- 55a:	0f b6       	in	r0, 0x3f	; 63
- 55c:	0f 92       	push	r0
- 55e:	11 24       	eor	r1, r1
+ 5ee:	1f 92       	push	r1
+ 5f0:	0f 92       	push	r0
+ 5f2:	0f b6       	in	r0, 0x3f	; 63
+ 5f4:	0f 92       	push	r0
+ 5f6:	11 24       	eor	r1, r1
 	//sleep queue handling
 }
- 560:	0f 90       	pop	r0
- 562:	0f be       	out	0x3f, r0	; 63
- 564:	0f 90       	pop	r0
- 566:	1f 90       	pop	r1
- 568:	18 95       	reti
+ 5f8:	0f 90       	pop	r0
+ 5fa:	0f be       	out	0x3f, r0	; 63
+ 5fc:	0f 90       	pop	r0
+ 5fe:	1f 90       	pop	r1
+ 600:	18 95       	reti
 
-0000056a <main>:
+00000602 <main>:
 
-void main() 
+int main() 
 {
    OS_Init();
- 56a:	47 df       	rcall	.-370    	; 0x3fa <OS_Init>
-   Task_Create( Pong );
- 56c:	86 e9       	ldi	r24, 0x96	; 150
- 56e:	92 e0       	ldi	r25, 0x02	; 2
- 570:	a0 df       	rcall	.-192    	; 0x4b2 <Task_Create>
-   Task_Create( Ping );
- 572:	81 e8       	ldi	r24, 0x81	; 129
- 574:	92 e0       	ldi	r25, 0x02	; 2
- 576:	9d df       	rcall	.-198    	; 0x4b2 <Task_Create>
+ 602:	0f df       	rcall	.-482    	; 0x422 <OS_Init>
+   Task_Create( Pong , 0, 0 );
+ 604:	40 e0       	ldi	r20, 0x00	; 0
+ 606:	50 e0       	ldi	r21, 0x00	; 0
+ 608:	60 e0       	ldi	r22, 0x00	; 0
+ 60a:	82 ee       	ldi	r24, 0xE2	; 226
+ 60c:	92 e0       	ldi	r25, 0x02	; 2
+ 60e:	88 df       	rcall	.-240    	; 0x520 <Task_Create>
+   Task_Create( Ping, 0, 0 );
+ 610:	40 e0       	ldi	r20, 0x00	; 0
+ 612:	50 e0       	ldi	r21, 0x00	; 0
+ 614:	60 e0       	ldi	r22, 0x00	; 0
+ 616:	8d ec       	ldi	r24, 0xCD	; 205
+ 618:	92 e0       	ldi	r25, 0x02	; 2
+ 61a:	82 df       	rcall	.-252    	; 0x520 <Task_Create>
    OS_Start();
- 578:	54 cf       	rjmp	.-344    	; 0x422 <OS_Start>
- 57a:	08 95       	ret
+ 61c:	32 df       	rcall	.-412    	; 0x482 <OS_Start>
+}
+ 61e:	80 e0       	ldi	r24, 0x00	; 0
+ 620:	90 e0       	ldi	r25, 0x00	; 0
+ 622:	08 95       	ret
 
-0000057c <_exit>:
- 57c:	f8 94       	cli
+00000624 <_exit>:
+ 624:	f8 94       	cli
 
-0000057e <__stop_program>:
- 57e:	ff cf       	rjmp	.-2      	; 0x57e <__stop_program>
+00000626 <__stop_program>:
+ 626:	ff cf       	rjmp	.-2      	; 0x626 <__stop_program>

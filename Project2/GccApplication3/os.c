@@ -67,6 +67,7 @@ static PD Process[MAXPROCESS];
 
 static queue_t ready_queue[10];
 static queue_t sleep_queue;
+static queue_t dead_pool_queue;
 
 
 /**
@@ -153,7 +154,7 @@ static PD* dequeue(queue_t* queue_ptr)
  * can just restore its execution context on its stack.
  * (See file "cswitch.S" for details.)
  */
-void Kernel_Create_Task_At( PD *p, voidfuncptr f ) 
+void Kernel_Create_Task_At( PD *p, voidfuncptr f , PRIORITY py, int arg) 
 {   
    unsigned char *sp;
    //Changed -2 to -1 to fix off by one error.
@@ -187,16 +188,18 @@ void Kernel_Create_Task_At( PD *p, voidfuncptr f )
    p->sp = sp;		/* stack pointer into the "workSpace" */
    p->code = f;		/* function to be executed as a task */
    p->request = NONE;
+	p->arg= arg;
+	p->priority=py;
    /*----END of NEW CODE----*/
    p->state = READY;
-
+	enqueue(ready_queue[p->priority],p);
 }
 
 
 /**
   *  Create a new task
   */
-static void Kernel_Create_Task( voidfuncptr f ) 
+static void Kernel_Create_Task( voidfuncptr f , PRIORITY py, int arg) 
 {
    int x;
 
@@ -208,7 +211,7 @@ static void Kernel_Create_Task( voidfuncptr f )
    }
 
    ++Tasks;
-   Kernel_Create_Task_At( &(Process[x]), f );
+   Kernel_Create_Task_At( &(Process[x]), f ,py, arg);
 
 }
 
@@ -226,16 +229,22 @@ static void Dispatch()
 	  //in 10 ready queues
 	  
 	  
-   while(Process[NextP].state != READY) {
+   /*while(Process[NextP].state != READY) {
       NextP = (NextP + 1) % MAXPROCESS;
-   }
+   }*/
+	int i;
+	
+	for (i=0;i<10;i++){
+		if (ready_queue[i].head!=NULL){
+			Cp=dequeue(ready_queue[i]);
+			CurrentSp = Cp->sp;
+			Cp->state = RUNNING;
+			Enable_Interrupt();
+			break;
+		}
+	}
+	
 
-   Cp = &(Process[NextP]);
-   CurrentSp = Cp->sp;
-   Cp->state = RUNNING;
-
-   NextP = (NextP + 1) % MAXPROCESS;
-	Enable_Interrupt();
 }
 
 /**
@@ -263,7 +272,7 @@ static void Next_Kernel_Request()
 
        switch(Cp->request){
        case CREATE:
-           Kernel_Create_Task( Cp->code );
+           Kernel_Create_Task( Cp->code , Cp->priority, Cp->arg );
            break;
        case NEXT:
 		 //Enqueue appropriately
@@ -331,13 +340,15 @@ void OS_Init()
    KernelActive = 0;
    NextP = 0;
 	//Reminder: Clear the memory for the task on creation.
-  /* for (x = 0; x < MAXPROCESS; x++) {
+   for (x = 0; x < MAXPROCESS-1; x++) {
       memset(&(Process[x]),0,sizeof(PD));
       Process[x].state = DEAD;
-   }*/
-  for(x=0;x<10;x++){
-	  
-  }
+		Process[x].next=&Process[x+1];
+   }
+	Process[MAXPROCESS-1].state=DEAD;
+	Process[MAXPROCESS-1].next=NULL;
+	dead_pool_queue.head = &Process[0];
+	dead_pool_queue.tail = &Process[MAXPROCESS - 1];
 }
 
 
@@ -363,16 +374,20 @@ void OS_Start()
   * each task gives up its share of the processor voluntarily by calling
   * Task_Next().
   */
-void Task_Create( voidfuncptr f)
+PID Task_Create( voidfuncptr f, PRIORITY py, int arg)
 {
    if (KernelActive ) {
      Disable_Interrupt();
      Cp ->request = CREATE;
      Cp->code = f;
+	  Cp->arg=arg;
+	  Cp->priority=py;
      Enter_Kernel();
+	  return Cp->pid;
    } else { 
       /* call the RTOS function directly */
-      Kernel_Create_Task( f );
+      Kernel_Create_Task( f,py,arg );
+		return Cp->pid;
    }
 }
 
@@ -453,11 +468,11 @@ ISR(TIMER1_COMPA_vect)
 	//sleep queue handling
 }
 
-void main() 
+int main() 
 {
    OS_Init();
-   Task_Create( Pong );
-   Task_Create( Ping );
+   Task_Create( Pong , 0, 0 );
+   Task_Create( Ping , 0, 0 );
    OS_Start();
 }
 

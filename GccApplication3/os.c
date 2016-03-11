@@ -1,9 +1,13 @@
+// enqueue method that enqueues at the front based on tick
+// sort sleep q based on sleep time (smallest at the front)
+
+
 #include <string.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <limits.h>
 #include "os.h"
 
-// Hello!
 
 /**
  * \file active.c
@@ -70,6 +74,10 @@ static PD Process[MAXPROCESS];
 static queue_t ready_queue[10];
 static queue_t sleep_queue;
 static queue_t dead_pool_queue;
+
+// To keep track of sleep time
+static int sleep_timer = 0;
+static int max_timer = INT_MAX;
 
 
 /**
@@ -208,12 +216,20 @@ static void Kernel_Create_Task( voidfuncptr f , PRIORITY py, int arg)
    if (Tasks == MAXPROCESS) return;  /* Too many task! */
 
    /* find a DEAD PD that we can use  */
-   for (x = 0; x < MAXPROCESS; x++) {
+   /*for (x = 0; x < MAXPROCESS; x++) {
        if (Process[x].state == DEAD) break;
+   }*/
+   
+   // take out from dead pool queue
+   PD *p = dequeue(&dead_pool_queue);
+   if (p == NULL)
+   {
+	  // error occurred, dead pool q empty
+	  return;
    }
 
    ++Tasks;
-   Kernel_Create_Task_At( &(Process[x]), f ,py, arg);
+   Kernel_Create_Task_At( p, f ,py, arg);
 
 }
 
@@ -278,7 +294,7 @@ static void Next_Kernel_Request()
            break;
        case NEXT:
 		 //Enqueue appropriately
-		   Cp->state = READY;
+		    Cp->state = READY;
 			Dispatch();
 			break;
 	   case NONE:
@@ -289,6 +305,13 @@ static void Next_Kernel_Request()
           Cp->state = DEAD;
           Dispatch();
           break;
+	   case SLEEP:
+		  Cp->state = SLEEPING;
+		  // now enqueue based on sleep time
+		  // set ticks
+		  
+		  Dispatch();
+		  break;
        default:
           /* Houston! we have a problem here! */
           break;
@@ -407,6 +430,18 @@ void Task_Next()
   }
 }
 
+void Task_Sleep(TICK t)
+{
+	Cp->TICK = (sleep_timer+t)%max_timer;
+	
+	if (KernelActive) {
+		Disable_Interrupt();
+		Cp ->request = NEXT;
+		enqueue(&ready_queue[Cp->priority],Cp);
+		Enter_Kernel();
+		
+	}
+}
 
 /**
   * The calling task terminates itself.
@@ -470,6 +505,11 @@ void Pong()
 ISR(TIMER1_COMPA_vect)
 {
 	//sleep queue handling
+	sleep_timer = (sleep_timer+1)%max_timer;
+	if(sleep_timer==sleep_queue->head->TICK){
+		PD* p=dequeue(&sleep_queue);
+		enqueue(&ready_queue,p)
+	}
 }
 
 int main() 

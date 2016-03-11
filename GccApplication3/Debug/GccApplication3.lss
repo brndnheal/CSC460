@@ -23,11 +23,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   9 .debug_frame  00000130  00000000  00000000  000018d8  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    0000037e  00000000  00000000  00001a08  2**0
+ 10 .debug_str    0000036e  00000000  00000000  00001a08  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000653  00000000  00000000  00001d86  2**0
+ 11 .debug_loc    00000653  00000000  00000000  00001d76  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000070  00000000  00000000  000023d9  2**0
+ 12 .debug_ranges 00000070  00000000  00000000  000023c9  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -178,12 +178,6 @@ Disassembly of section .text:
  108:	7b cf       	rjmp	.-266    	; 0x0 <__vectors>
 
 0000010a <CSwitch>:
-Exit_Kernel:
-        /* 
-          * This is the "top" half of CSwitch(), generally called by the kernel.
-          * Assume I = 0, i.e., all interrupts are disabled.
-          */
-        SAVECTX
  10a:	0f 92       	push	r0
  10c:	1f 92       	push	r1
  10e:	2f 92       	push	r2
@@ -220,40 +214,16 @@ Exit_Kernel:
  14c:	0f 93       	push	r16
  14e:	ff b7       	in	r31, 0x3f	; 63
  150:	ff 93       	push	r31
-        /* 
-          * Now, we have saved the kernel's context.
-          * Save the current H/W stack pointer into KernelSp.
-          */
-        in   r30, SPL
  152:	ed b7       	in	r30, 0x3d	; 61
-        in   r31, SPH
  154:	fe b7       	in	r31, 0x3e	; 62
-		  in   r16, EIND
  156:	0c b7       	in	r16, 0x3c	; 60
-        sts  KernelSp, r30
  158:	e0 93 be 0a 	sts	0x0ABE, r30
-        sts  KernelSp+1, r31
  15c:	f0 93 bf 0a 	sts	0x0ABF, r31
-
-        /*
-          * We are now ready to restore Cp's context, i.e.,
-          * switching the H/W stack pointer to CurrentSp.
-          */ 
-        lds  r30, CurrentSp
  160:	e0 91 bc 0a 	lds	r30, 0x0ABC
-        lds  r31, CurrentSp+1
  164:	f0 91 bd 0a 	lds	r31, 0x0ABD
-        out  SPL, r30
  168:	ed bf       	out	0x3d, r30	; 61
-        out  SPH, r31
  16a:	fe bf       	out	0x3e, r31	; 62
-		  out  EIND, r16
  16c:	0c bf       	out	0x3c, r16	; 60
-        /*
-          * We are now executing in Cp's stack.
-          * Note: at the bottom of the Cp's context is its return address.
-          */
-        RESTORECTX
  16e:	ff 91       	pop	r31
  170:	ff bf       	out	0x3f, r31	; 63
  172:	0f 91       	pop	r16
@@ -290,16 +260,9 @@ Exit_Kernel:
  1b0:	2f 90       	pop	r2
  1b2:	1f 90       	pop	r1
  1b4:	0f 90       	pop	r0
-        reti         /* re-enable all global interrupts */
  1b6:	18 95       	reti
 
 000001b8 <Enter_Kernel>:
-Enter_Kernel:   
-        /*
-          * This is the "bottom" half of CSwitch(). We are still executing in
-          * Cp's context.
-          */
-        SAVECTX
  1b8:	0f 92       	push	r0
  1ba:	1f 92       	push	r1
  1bc:	2f 92       	push	r2
@@ -336,38 +299,16 @@ Enter_Kernel:
  1fa:	0f 93       	push	r16
  1fc:	ff b7       	in	r31, 0x3f	; 63
  1fe:	ff 93       	push	r31
-        /* 
-          * Now, we have saved the Cp's context.
-          * Save the current H/W stack pointer into CurrentSp.
-          */
-        in   r30, SPL
  200:	ed b7       	in	r30, 0x3d	; 61
-        in   r31, SPH
  202:	fe b7       	in	r31, 0x3e	; 62
-		  in   r16, EIND
  204:	0c b7       	in	r16, 0x3c	; 60
-        sts  CurrentSp, r30
  206:	e0 93 bc 0a 	sts	0x0ABC, r30
-        sts  CurrentSp+1, r31
  20a:	f0 93 bd 0a 	sts	0x0ABD, r31
-        /*
-          * We are now ready to restore kernel's context, i.e.,
-          * switching the H/W stack pointer back to KernelSp.
-          */ 
-        lds  r30, KernelSp
  20e:	e0 91 be 0a 	lds	r30, 0x0ABE
-        lds  r31, KernelSp+1
  212:	f0 91 bf 0a 	lds	r31, 0x0ABF
-        out  SPL, r30
  216:	ed bf       	out	0x3d, r30	; 61
-        out  SPH, r31
  218:	fe bf       	out	0x3e, r31	; 62
-		  out  EIND, r16
  21a:	0c bf       	out	0x3c, r16	; 60
-        /*
-          * We are now executing in kernel's stack.
-          */
-       RESTORECTX
  21c:	ff 91       	pop	r31
  21e:	ff bf       	out	0x3f, r31	; 63
  220:	0f 91       	pop	r16
@@ -404,12 +345,6 @@ Enter_Kernel:
  25e:	2f 90       	pop	r2
  260:	1f 90       	pop	r1
  262:	0f 90       	pop	r0
-        /* 
-          * We are ready to return to the caller of CSwitch() (or Exit_Kernel()).
-          * Note: We should NOT re-enable interrupts while kernel is running.
-          *         Therefore, we use "ret", and not "reti".
-          */
-       ret
  264:	08 95       	ret
 
 00000266 <Dispatch>:

@@ -55,6 +55,8 @@ typedef struct create_args
 	int arg;
 	/** Priority of the new task: RR, PERIODIC, SYSTEM */
 	PRIORITY py;
+	
+	PID pid;
 }
 create_args;
 /**
@@ -76,7 +78,7 @@ typedef enum kernel_request_type
    NONE = 0,
    CREATE,
    NEXT,
-	SUSPEND,
+   SUSPEND,
 	SLEEPING,
 	YIELD,
 	RESUME,

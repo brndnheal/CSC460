@@ -23,14 +23,14 @@ typedef unsigned int TICK;
 // void OS_Init(void);      redefined as main()
 void OS_Abort(void);
 
-PID  Task_Create( void (*f)(void), PRIORITY py, int arg); //implement by changing task_create
-void Task_Terminate(void); //done
-void Task_Yield(void);//done
-int  Task_GetArg(void);//what?
+PID  Task_Create( void (*f)(void), PRIORITY py, int arg); //DONE
+void Task_Terminate(void); //DONE
+void Task_Yield(void);//DONE
+int  Task_GetArg(void);//DONE
 void Task_Suspend( PID p );  //implement using mirrored states via suspension flag on process descriptor    
 void Task_Resume( PID p ); //implement  using mirrored states via suspension flag on process descriptor 
 
-void Task_Sleep(TICK t);  // sleep time is at least t*MSECPERTICK implement using sleep queue
+void Task_Sleep(TICK t);  // GOUDINE
 
 MUTEX Mutex_Init(void); //Do mutex at end.
 void Mutex_Lock(MUTEX m);
@@ -47,7 +47,18 @@ typedef void (*voidfuncptr) (void);
 
 
 
-
+typedef struct create_args
+{
+	/** The code the new task is to run.*/
+	voidfuncptr code;
+	/** A new task may be created with an argument that it can retrieve later. */
+	int arg;
+	/** Priority of the new task: RR, PERIODIC, SYSTEM */
+	PRIORITY py;
+	
+	PID pid;
+}
+create_args;
 /**
   *  This is the set of states that a task can be in at any given time.
   */
@@ -69,14 +80,17 @@ typedef enum kernel_request_type
    CREATE,
    NEXT,
    TERMINATE,
-   SLEEP
+   SLEEP,
+   SUSPEND,
+   YIELD,
+   RESUME
 } KERNEL_REQUEST_TYPE;
 
 typedef struct ProcessDescriptor PD;
 
 struct ProcessDescriptor 
 {
-   unsigned char *sp;   /* stack pointer into the "workSpace" */
+   unsigned volatile char *sp;   /* stack pointer into the "workSpace" */
    unsigned char workSpace[WORKSPACE]; 
    PROCESS_STATES state;
    voidfuncptr  code;   /* function to be executed as a task */
@@ -87,16 +101,17 @@ struct ProcessDescriptor
 	PRIORITY priority;
 	PID pid;
 	unsigned int arg;
+	unsigned int arg2;
 	unsigned int suspend;
-	PD* next;
+	volatile PD* next;
 };
 
 typedef struct
 {
 	/** The first item in the queue. NULL if the queue is empty. */
-	PD*  head;
+	volatile PD*  head;
 	/** The last item in the queue. Undefined if the queue is empty. */
-	PD*  tail;
+	volatile PD*  tail;
 }
 queue_t;
 #endif /* _OS_H_ */

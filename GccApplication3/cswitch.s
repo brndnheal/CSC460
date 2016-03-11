@@ -115,6 +115,10 @@ EIND = 0X3C
 	pop	r0
 .endm
 
+.macro	STACK_SREG_SET_I_BIT
+	ori    r31, 0x80   
+.endm
+
         .section .text
         .global CSwitch
         .global Exit_Kernel

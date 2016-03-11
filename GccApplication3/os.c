@@ -63,12 +63,13 @@ extern void Enter_Kernel();
   * This table contains ALL process descriptors. It doesn't matter what
   * state a task is in.
   */
-static PD Process[MAXPROCESS];
 
-static queue_t ready_queue[10];
+volatile static PD Process[MAXPROCESS];
+
+static queue_t ready_queue[11];
 static queue_t sleep_queue;
 static queue_t dead_pool_queue;
-
+volatile int preempt=0;
 
 /**
   * The process descriptor of the currently RUNNING task.
@@ -101,10 +102,11 @@ volatile static unsigned int KernelActive;
 /** number of tasks created so far */
 volatile static unsigned int Tasks;  
 
+static volatile create_args kernel_request_create_args;
 
 
 
-static void enqueue(queue_t* queue_ptr, PD* task_to_add)
+static void enqueue(queue_t* queue_ptr,volatile PD* task_to_add)
 {
     task_to_add->next = NULL;
 
@@ -129,9 +131,9 @@ static void enqueue(queue_t* queue_ptr, PD* task_to_add)
  * @param queue_ptr the queue to pop
  * @return the popped task descriptor
  */
-static PD* dequeue(queue_t* queue_ptr)
+static volatile PD* dequeue(queue_t* queue_ptr)
 {
-    PD* task_ptr = queue_ptr->head;
+    volatile PD* task_ptr = queue_ptr->head;
 
     if(queue_ptr->head != NULL)
     {
@@ -154,7 +156,7 @@ static PD* dequeue(queue_t* queue_ptr)
  * can just restore its execution context on its stack.
  * (See file "cswitch.S" for details.)
  */
-void Kernel_Create_Task_At( PD *p, voidfuncptr f , PRIORITY py, int arg) 
+void Kernel_Create_Task_At(volatile PD *p, voidfuncptr f , PRIORITY py, int arg) 
 {   
    unsigned char *sp;
    //Changed -2 to -1 to fix off by one error.
@@ -190,6 +192,7 @@ void Kernel_Create_Task_At( PD *p, voidfuncptr f , PRIORITY py, int arg)
    p->request = NONE;
 	p->arg= arg;
 	p->priority=py;
+	p->suspend=0;
    /*----END of NEW CODE----*/
    p->state = READY;
 	enqueue(&ready_queue[p->priority],p);
@@ -201,17 +204,14 @@ void Kernel_Create_Task_At( PD *p, voidfuncptr f , PRIORITY py, int arg)
   */
 static void Kernel_Create_Task( voidfuncptr f , PRIORITY py, int arg) 
 {
-   int x;
 
    if (Tasks == MAXPROCESS) return;  /* Too many task! */
 
    /* find a DEAD PD that we can use  */
-   for (x = 0; x < MAXPROCESS; x++) {
-       if (Process[x].state == DEAD) break;
-   }
+   volatile PD* p=dequeue(&dead_pool_queue);
 
    ++Tasks;
-   Kernel_Create_Task_At( &(Process[x]), f ,py, arg);
+   Kernel_Create_Task_At( p, f ,py, arg);
 
 }
 
@@ -234,7 +234,7 @@ static void Dispatch()
    }*/
 	int i;
 	
-	for (i=0;i<10;i++){
+	for (i=0;i<11;i++){
 		if (ready_queue[i].head!=NULL){
 			Cp=dequeue(&ready_queue[i]);
 			CurrentSp = Cp->sp;
@@ -247,6 +247,17 @@ static void Dispatch()
 
 }
 
+
+int check_rqueue(){
+	int i;
+	for(i=0;i<Cp->priority;i++){
+		
+		if(ready_queue[i].head!=NULL){
+			return 1;
+		}
+	}
+	return 0;
+}
 /**
   * This internal kernel function is the "main" driving loop of this full-served
   * model architecture. Basically, on OS_Start(), the kernel repeatedly
@@ -260,31 +271,53 @@ static void Next_Kernel_Request()
    Dispatch();  /* select a new task to run */
 
    while(1) {
-
        /* activate this newly selected task */
-       CurrentSp = Cp->sp;
-       Exit_Kernel();    /* or CSwitch() */
+      CurrentSp = Cp->sp;
+      Exit_Kernel();    /* or CSwitch() */
 
        /* if this task makes a system call, it will return to here! */
 
         /* save the Cp's stack pointer */
-       Cp->sp = CurrentSp;
+      Cp->sp = CurrentSp;
 
-       switch(Cp->request){
-       case CREATE:
-           Kernel_Create_Task( Cp->code , Cp->priority, Cp->arg );
+      switch(Cp->request){
+			
+      case CREATE:
+           Kernel_Create_Task( kernel_request_create_args.code , kernel_request_create_args.py, kernel_request_create_args.arg );
+			  if(check_rqueue()){
+				 
+				  Cp->state=READY;
+				   //enqueue(&ready_queue[Cp->priority],Cp);
+					
+				  Cp->next=ready_queue[Cp->priority].head;
+				  ready_queue[Cp->priority].head=Cp;
+				  
+				  Dispatch();
+			  }
            break;
-       case NEXT:
+			  
+      case NEXT:
 		 //Enqueue appropriately
 		   Cp->state = READY;
 			Dispatch();
 			break;
+			
+		case YIELD:
+		 //Enqueue appropriately
+			Cp->state = READY;
+			enqueue(&ready_queue[Cp->priority],Cp);
+			Dispatch();
+			break;
+			
+		 case SUSPEND:
+		
 	   case NONE:
 	//shouldn't happen
           break;
        case TERMINATE:
           /* deallocate all resources used by this task */
           Cp->state = DEAD;
+			 enqueue(&dead_pool_queue,Cp);
           Dispatch();
           break;
        default:
@@ -327,7 +360,7 @@ void OS_Init()
 {
 
 	DDRA= (1<<PA0);
-	DDRA = (1<<PA1);
+	DDRA |= (1<<PA1);
 	PORTA &= ~(1<<PA0);
 	PORTA &= ~(1<<PA1);
 	
@@ -378,10 +411,10 @@ PID Task_Create( voidfuncptr f, PRIORITY py, int arg)
 {
    if (KernelActive ) {
      Disable_Interrupt();
+	  kernel_request_create_args.code = (voidfuncptr)f;
+	  kernel_request_create_args.arg = arg;
+	  kernel_request_create_args.py = py;
      Cp ->request = CREATE;
-     Cp->code = f;
-	  Cp->arg=arg;
-	  Cp->priority=py;
      Enter_Kernel();
 	  return Cp->pid;
    } else { 
@@ -391,6 +424,7 @@ PID Task_Create( voidfuncptr f, PRIORITY py, int arg)
    }
 }
 
+
 /**
   * The calling task gives up its share of the processor voluntarily.
   */
@@ -399,13 +433,50 @@ void Task_Next()
    if (KernelActive) {
      Disable_Interrupt();
      Cp ->request = NEXT;
-	  enqueue(&ready_queue[Cp->priority],Cp);
      Enter_Kernel();
 	  
   }
 }
 
+void Task_Yield()
+{
+	if (KernelActive) {
+		Disable_Interrupt();
+		Cp ->request = YIELD;
+		Enter_Kernel();
+	}
+}
 
+int  Task_GetArg(void){
+	return Cp->arg;
+}
+
+void Task_Suspend( PID p ){
+	int i;
+	for(i=0;i<11;i++){
+		if (Process[i].pid==p){
+			Process[i].suspend=1;
+			break;
+		}
+	}
+	if (p==Cp->pid){
+		Disable_Interrupt();
+		Cp ->request = SUSPEND;
+		Enter_Kernel();
+	}
+}  
+void Task_Resume( PID p ){
+	int i;
+	for(i=0;i<11;i++){
+		if (Process[i].pid==p){
+			Process[i].suspend=0;
+			break;
+		}
+	}
+	Disable_Interrupt();
+	Cp ->request = RESUME;
+	Enter_Kernel();
+}
 /**
   * The calling task terminates itself.
   */
@@ -419,26 +490,49 @@ void Task_Terminate()
    }
 }
 
-/*============
-  * A Simple Test 
-  *============
-  */
 
 /**
   * A cooperative "Ping" task.
   * Added testing code for LEDs.
   */
+
+void Pong2(){
+	int x;
+	PORTA |= (1<<PA0);
+	for(;;) {
+		//LED on
+			PORTA |= (1<<PA0);
+		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);
+		PORTA &= ~(1<<PA0);
+		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);
+		Task_Yield();
+	}
+}
 void Ping() 
 {
 	int x;
+	PORTA &= ~(1<<PA0);
+	for(x=0;x<32000;x++);
+	for(x=0;x<32000;x++);
+	for(x=0;x<32000;x++);
+	for(x=0;x<32000;x++);
+	Task_Create(Pong2,0,0);
   for(;;){
-
-	PORTA &= ~(1<<PA1);
 	for(x=0;x<32000;x++);
 	for(x=0;x<32000;x++);
 	for(x=0;x<32000;x++);
 	for(x=0;x<32000;x++);
-	Task_Next();
+		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);
+	//Task_Yield();
   }
 }
 
@@ -450,31 +544,40 @@ void Ping()
 void Pong() 
 {
 	int x;
+	PORTA &= ~(1<<PA0);  
+	Task_Create(Ping,1,0);
   for(;;) {
 	//LED on
-
-	//LED off
-	PORTA |= (1<<PA1); 
+		PORTA &= ~(1<<PA0);
 		for(x=0;x<32000;x++);
 		for(x=0;x<32000;x++);
 		for(x=0;x<32000;x++);
 		for(x=0;x<32000;x++);
-	
-	Task_Next();
+		//Task_Yield(); 
+	//Task_Yield();
   }
 }
 
+void a_main(){
+	 Task_Create(Pong,5,0);
+	 Task_Terminate();
+ }
 
 ISR(TIMER1_COMPA_vect)
 {
 	//sleep queue handling
+	/*preempt=check_rqueue();
+	if (preempt==1) {
+		
+		Task_Yield();
+	}*/
+	
 }
 
 int main() 
 {
    OS_Init();
-   Task_Create( Pong , 0, 0 );
-   Task_Create( Ping , 0, 0 );
+   Task_Create( a_main , 0, 0 );
    OS_Start();
 }
 

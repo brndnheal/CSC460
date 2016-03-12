@@ -66,8 +66,9 @@ typedef enum process_states
 { 
    DEAD = 0, 
    READY,
-	BLOCKED,
-   RUNNING 
+   BLOCKED,
+   RUNNING,
+   SLEEPING
 } PROCESS_STATES;
 
 /**
@@ -78,13 +79,14 @@ typedef enum kernel_request_type
    NONE = 0,
    CREATE,
    NEXT,
+   TERMINATE,
+   SLEEP,
    SUSPEND,
-	SLEEPING,
 	YIELD,
 	RESUME,
 	BLOCK,
 	UNBLOCK,
-   TERMINATE
+   WAKE
 } KERNEL_REQUEST_TYPE;
 
 typedef struct ProcessDescriptor PD;
@@ -116,4 +118,5 @@ typedef struct
 	volatile PD*  tail;
 }
 queue_t;
+
 #endif /* _OS_H_ */

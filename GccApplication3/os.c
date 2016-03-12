@@ -1,5 +1,3 @@
-// enqueue method that enqueues at the front based on tick
-// sort sleep q based on sleep time (smallest at the front)
 
 
 #include <string.h>
@@ -134,6 +132,81 @@ static void enqueue(queue_t* queue_ptr, volatile PD* task_to_add)
         queue_ptr->tail = task_to_add;
     }
 }
+
+
+static void enqueue_sleep(volatile PD* task_to_add)
+{
+	task_to_add->next = NULL;
+	volatile PD *curr;
+	volatile PD *prev;
+	
+	int rotations = task_to_add->tick / max_timer;
+	int remainder = task_to_add->tick % max_timer;
+	
+	int curr_rotations = 0;
+	int curr_remainder = 0;
+	
+	if(sleep_queue.head == NULL)
+	{
+		sleep_queue.head = task_to_add;
+		sleep_queue.tail = task_to_add;
+	}
+
+	else 
+	{		
+		curr=sleep_queue.head;
+		prev=sleep_queue.head;
+		curr_rotations = curr->tick/max_timer;
+		curr_remainder = curr->tick % max_timer;
+		if(rotations<curr_rotations)
+		{
+			sleep_queue.head=task_to_add;
+			task_to_add->next=curr;
+		}
+		else if(rotations==curr_rotations)
+		{
+			if(remainder<curr_remainder)
+			{
+				sleep_queue.head=task_to_add;
+				task_to_add->next=curr;
+			}	
+		}
+
+		else
+		{
+			curr = prev->next;
+			while (curr != NULL)
+			{
+				curr_rotations = curr->tick/max_timer;
+				curr_remainder = curr->tick % max_timer;
+
+				if (rotations<curr_rotations)
+				{
+					prev->next = task_to_add;
+					task_to_add = curr;
+					return;
+				}
+				else if (rotations == curr_rotations)
+				{
+					if (remainder<curr_remainder)
+					{
+						prev->next = task_to_add;
+						task_to_add = curr;
+						return;
+					}
+				}
+				prev=prev->next;
+				curr=curr->next;
+			}
+			prev->next=task_to_add;
+			sleep_queue.tail=task_to_add;
+		}
+	}
+
+}
+
+
+		
 
 
 /**
@@ -353,7 +426,6 @@ static void Next_Kernel_Request()
       Exit_Kernel();    /* or CSwitch() */
 
        /* if this task makes a system call, it will return to here! */
-
         /* save the Cp's stack pointer */
       Cp->sp = CurrentSp;
 
@@ -402,8 +474,8 @@ static void Next_Kernel_Request()
 	   case SLEEP:
 		  Cp->state = SLEEPING;
 		  // now enqueue based on sleep time
-		  // set ticks
-		  
+		  // enqueue to sleep queue in sleep call
+		  //enqueue_sleep(Cp);		  
 		  Dispatch();
 		  break;
        default:
@@ -533,12 +605,12 @@ void Task_Next()
 
 void Task_Sleep(TICK t)
 {
-	Cp->tick = (sleep_timer+t) % max_timer;
 	
-	if (KernelActive) {
+	if (KernelActive) 
+	{
 		Disable_Interrupt();
-		Cp ->request = NEXT;
-		enqueue(&ready_queue[Cp->priority],Cp);
+		Cp ->request = SLEEP;
+		Cp->tick = t;
 		Enter_Kernel();
 		
 	}
@@ -670,7 +742,8 @@ void a_main(){
 	 Task_Create(Pong,5,0);
 	 Task_Terminate();
  }
-
+ 
+/*
 ISR(TIMER1_COMPA_vect)
 {
 	//sleep queue handling
@@ -678,10 +751,9 @@ ISR(TIMER1_COMPA_vect)
 	if(sleep_timer==sleep_queue.head->tick)
 	{
 		PD* p=dequeue(&sleep_queue);
-		enqueue(&ready_queue,p);
 	}
 }
-
+*/
 int main() 
 {
    OS_Init();

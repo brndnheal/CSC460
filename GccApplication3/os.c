@@ -65,10 +65,13 @@ extern void Enter_Kernel();
   */
 
 volatile static PD Process[MAXPROCESS];
+volatile static MUTEX Mutex[MAXMUTEX];
 
+static queue_t mutex_queue[MAXMUTEX];
 static queue_t ready_queue[11];
 static queue_t sleep_queue;
 static queue_t dead_pool_queue;
+static volatile MUTEX mutex_unlock_arg;
 volatile int preempt=0;
 
 /**
@@ -154,13 +157,20 @@ static volatile PD* dequeue_from_ready(queue_t* queue_ptr)
 	if(queue_ptr->head != NULL)
 	{
 		if (current->suspend==0){
+				if (queue_ptr->tail==current){
+					queue_ptr->tail=NULL;
+				}
 			queue_ptr->head=current->next;
 			current->next=NULL;
 			return current;
 		}
+		
 		current=prev->next;
 		while(current!=NULL){
 			if(current->suspend==0){
+				if (queue_ptr->tail==current){
+					queue_ptr->tail=prev;
+				}
 				prev->next=current->next;
 				current->next=NULL;
 				return current;
@@ -223,6 +233,7 @@ static void Kernel_Create_Task_At(volatile PD *p, voidfuncptr f , PRIORITY py, i
    p->request = NONE;
 	p->arg= arg;
 	p->priority=py;
+	p->past=-1;
 	p->suspend=0;
    /*----END of NEW CODE----*/
    p->state = READY;
@@ -282,7 +293,7 @@ static void Dispatch()
 	}
 	if(!found){
 		//error;
-		OS_Abort();
+		//OS_Abort();
 	}
 
 }
@@ -348,7 +359,9 @@ static void Next_Kernel_Request()
       switch(Cp->request){
 			
       case CREATE:
-           kernel_request_create_args.pid= Kernel_Create_Task( kernel_request_create_args.code , kernel_request_create_args.py, kernel_request_create_args.arg );
+           kernel_request_create_args.pid= Kernel_Create_Task( kernel_request_create_args.code , 
+																					kernel_request_create_args.py, 
+																					kernel_request_create_args.arg );
 			  preemption();
            break;
 			  
@@ -366,30 +379,61 @@ static void Next_Kernel_Request()
 			break;
 			
 			//If a task suspends itself, put back in ready queue and dispatch??
-		 case SUSPEND:			
+		case SUSPEND:			
 			Cp->state=READY;
 			Cp->suspend=1;
 			enqueue(&ready_queue[Cp->priority],Cp);
 			Dispatch();
 			break;
-		 
-		 //
-		 case RESUME:
-			 preemption();
-			 break;
+		case RESUME:
+			preemption();
+			break;
 		
 	   case NONE:
-	//shouldn't happen
           break;
-       case TERMINATE:
-          /* deallocate all resources used by this task */
-          Cp->state = DEAD;
-			 enqueue(&dead_pool_queue,Cp);
-          Dispatch();
-          break;
-       default:
-          /* Houston! we have a problem here! */
-          break;
+			 
+		case TERMINATE:
+			/* deallocate all resources used by this task */
+			Cp->state = DEAD;
+			enqueue(&dead_pool_queue,Cp);
+			Dispatch();
+			break;
+			
+		case BLOCK:
+			Cp->state=BLOCKED;
+			enqueue(&mutex_queue[mutex_unlock_arg],Cp);
+			Dispatch();
+			break;
+
+		case UNBLOCK:
+				if(mutex_queue[mutex_unlock_arg].head!=NULL){
+					
+					PD* p=dequeue(&mutex_queue[mutex_unlock_arg]);
+					Mutex[mutex_unlock_arg]=p->pid;
+					//inheritance passes on
+					if((Cp->priority<p->priority)&&(Cp->past>-1)){
+						p->past=p->priority;
+						p->priority=Cp->priority;
+					}
+					p->state=READY;
+					enqueue(&ready_queue[p->priority],p);
+
+				}
+				else{
+					Mutex[mutex_unlock_arg]=-1;
+				}
+				//reset Cp-> priority
+				if(Cp->past>-1){
+					
+					Cp->priority=Cp->past;
+					Cp->past=-1;
+				}
+			preemption();
+			break;
+			
+		
+      default:
+         break;
        }
     } 
 }
@@ -446,6 +490,13 @@ void OS_Init()
 		Process[x].pid=x;
 		Process[x].next=&Process[x+1];
    }
+	for (x=0;x<MAXMUTEX;x++){
+		//un owned mutex=-1, owned mutex=pid of owner, mutex identified by index in mutex array.
+		Mutex[x]=-1;
+		mutex_queue[x].head=NULL;
+		mutex_queue[x].tail=NULL;
+			
+	}
 	Process[MAXPROCESS-1].state=DEAD;
 	Process[MAXPROCESS-1].next=NULL;
 	dead_pool_queue.head = &Process[0];
@@ -475,6 +526,53 @@ void OS_Start()
    }
 }
 
+MUTEX Mutex_Init(void){
+	int x;
+	for(x=0;x<MAXMUTEX;x++){
+		if (Mutex[x]==-1){
+			return x;
+		}
+	}
+	return -1;
+}
+
+
+void Mutex_Lock(MUTEX m){
+	if (Mutex[m]==-1){
+
+		Mutex[m]=Cp->pid;
+	}
+	else{
+
+		//block task on mutex, priority inheritance
+		Cp->request=BLOCK;
+		Disable_Interrupt();
+		if (Cp->priority<Process[Mutex[m]].priority){
+			if(Process[Mutex[m]].past==-1){
+				Process[Mutex[m]].past=Process[Mutex[m]].priority;
+			}
+			Process[Mutex[m]].priority=Cp->priority;
+		}
+				mutex_unlock_arg=m;
+
+
+		Enter_Kernel();
+	}
+}
+
+void Mutex_Unlock(MUTEX m){
+	if(Mutex[m]==Cp->pid){
+		Disable_Interrupt();
+		Cp->request=UNBLOCK;
+		mutex_unlock_arg=m;
+		Enter_Kernel();
+		//enter kernel to unblock task if necessary
+	}
+	else{
+		//mutex not owned
+		OS_Abort();
+	}
+}
 
 /**
   * For this example, we only support cooperatively multitasking, i.e.,
@@ -563,58 +661,12 @@ void Task_Terminate()
    }
 }
 
-
-void Ping2(){
-	int x;
-	for(;;) {
-		PORTA &= ~(1<<PA0);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		Task_Yield();
-	}
-}
-/**
-  * A cooperative "Ping" task.
-  * Added testing code for LEDs.
-  */
-
-void Pong2(){
-	int x;
-	PID p;
-	p=Task_Create(Ping2,0,0);
-			//Task_Suspend(p);
-	for(;;) {
-		//LED on
-		PORTA |= (1<<PA0);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-
-		Task_Suspend(p);
-		Task_Resume(p);
-		//Task_Yield();
-		//PORTA &= ~(1<<PA0);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-	}
-}
 void Ping() 
 {
-	int x;
-//	PORTA &= ~(1<<PA0);
-	for(x=0;x<32000;x++);
-	for(x=0;x<32000;x++);
-	for(x=0;x<32000;x++);
-	for(x=0;x<32000;x++);
-	Task_Create(Pong2,0,0);
   for(;;){
-	  Task_Yield();
-
+	 Mutex_Lock(0);
+			 PORTA |= (1<<PA0);
+	 Mutex_Unlock(0);
   }
 }
 
@@ -625,15 +677,17 @@ void Ping()
   */
 void Pong() 
 {
-	//PORTA &= ~(1<<PA0);  
-	Task_Create(Ping,1,0);
   for(;;) {
-		Task_Yield(); 
+	  Mutex_Lock(0);
+	  			 PORTA &= ~(1<<PA0);
+	  Mutex_Unlock(0);
+	  Task_Yield();
   }
 }
 
 void a_main(){
-	 Task_Create(Pong,5,0);
+	 Task_Create(Ping,0,0);
+	 Task_Create(Pong,0,0);
 	 Task_Terminate();
  }
 

@@ -82,6 +82,8 @@ typedef enum kernel_request_type
 	SLEEPING,
 	YIELD,
 	RESUME,
+	BLOCK,
+	UNBLOCK,
    TERMINATE
 } KERNEL_REQUEST_TYPE;
 
@@ -98,6 +100,7 @@ struct ProcessDescriptor
 	//Added by Brendan
 	TICK tick;
 	PRIORITY priority;
+	PRIORITY past;
 	PID pid;
 	unsigned int arg;
 	unsigned int arg2;

@@ -83,7 +83,8 @@ typedef enum kernel_request_type
    SLEEP,
    SUSPEND,
    YIELD,
-   RESUME
+   RESUME,
+   WAKE
 } KERNEL_REQUEST_TYPE;
 
 typedef struct ProcessDescriptor PD;

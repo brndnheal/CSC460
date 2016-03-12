@@ -83,7 +83,8 @@ volatile int preempt=0;
 /**
   * The process descriptor of the currently RUNNING task.
   */
-volatile static PD* Cp; 
+volatile static PD* Cp;
+volatile static PD* p; 
 
 /** 
   * Since this is a "full-served" model, the kernel is executing using its own
@@ -398,8 +399,8 @@ void preemption(){
 		Cp->state=READY;
 		//enqueue(&ready_queue[Cp->priority],Cp);
 		
-		Cp->next=ready_queue[Cp->priority].head;
-		ready_queue[Cp->priority].head=Cp;
+		Cp->next = ready_queue[Cp->priority].head;
+		ready_queue[Cp->priority].head = Cp;
 		
 		Dispatch();
 	}
@@ -475,9 +476,13 @@ static void Next_Kernel_Request()
 		  Cp->state = SLEEPING;
 		  // now enqueue based on sleep time
 		  // enqueue to sleep queue in sleep call
-		  //enqueue_sleep(Cp);		  
+		  enqueue_sleep(Cp);		  
 		  Dispatch();
 		  break;
+	   case WAKE:
+		  p = dequeue(&sleep_queue);
+		  enqueue(&ready_queue[p->priority], p);
+		  preemption();
        default:
           /* Houston! we have a problem here! */
           break;
@@ -673,12 +678,14 @@ void Task_Terminate()
 void Ping2(){
 	int x;
 	for(;;) {
-		PORTA &= ~(1<<PA0);
+		//PORTA &= ~(1<<PA0);   turn off
+		PORTA |= (1<<PA0);  // turn on
+		PORTA &= ~(1<<PA0); 
+		/*for(x=0;x<32000;x++);
 		for(x=0;x<32000;x++);
 		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		Task_Yield();
+		for(x=0;x<32000;x++);*/
+		Task_Sleep(500);
 	}
 }
 /**
@@ -689,24 +696,28 @@ void Ping2(){
 void Pong2(){
 	int x;
 	PID p;
-	p=Task_Create(Ping2,0,0);
+	//p=Task_Create(Ping2,0,0);
 			//Task_Suspend(p);
 	for(;;) {
-		//LED on
 		PORTA |= (1<<PA0);
+		PORTA &= ~(1<<PA0); 
+		//LED on
+ // turn on
+		//PORTA &= ~(1<<PA0);  // turn off
+		/*for(x=0;x<32000;x++);
 		for(x=0;x<32000;x++);
 		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);*/
 
-		Task_Suspend(p);
-		//Task_Resume(p);
-		Task_Yield();
+	//	Task_Suspend(p);
+	//	Task_Resume(p);
+		Task_Sleep(500);
+	//	Task_Yield();
 		//PORTA &= ~(1<<PA0);
+		/*for(x=0;x<32000;x++);
 		for(x=0;x<32000;x++);
 		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
+		for(x=0;x<32000;x++);*/
 	}
 }
 void Ping() 
@@ -743,17 +754,26 @@ void a_main(){
 	 Task_Terminate();
  }
  
-/*
+
 ISR(TIMER1_COMPA_vect)
 {
-	//sleep queue handling
-	sleep_timer = (sleep_timer+1)%max_timer;
-	if(sleep_timer==sleep_queue.head->tick)
-	{
-		PD* p=dequeue(&sleep_queue);
+	volatile PD* curr;
+	curr = sleep_queue.head;
+	while(curr!= NULL){
+		if(curr->tick!=0){
+			curr->tick--;
+		}
+
+		curr = curr->next;
 	}
+	if(sleep_queue.head->tick == 0)
+	{
+		Cp->request = WAKE;
+		Enter_Kernel();
+	}
+
 }
-*/
+
 int main() 
 {
    OS_Init();

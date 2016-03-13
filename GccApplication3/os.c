@@ -5,6 +5,9 @@
 #include <avr/interrupt.h>
 #include <limits.h>
 #include "os.h"
+#include "error_code.h"
+
+
 
 
 /**
@@ -78,6 +81,7 @@ static queue_t dead_pool_queue;
 static volatile MUTEX mutex_unlock_arg;
 
 static int max_timer = INT_MAX;
+static uint8_t volatile error_msg;
 
 volatile int preempt=0;
 
@@ -223,7 +227,13 @@ static volatile PD* dequeue(queue_t* queue_ptr)
 
     if(queue_ptr->head != NULL)
     {
+		 if (queue_ptr->head==queue_ptr->tail){
+			queue_ptr->head =NULL;
+			queue_ptr->tail =NULL;
+		 }
+		 else{
         queue_ptr->head = queue_ptr->head->next;
+		 }
         task_ptr->next = NULL;
     }
 
@@ -330,7 +340,10 @@ static void Kernel_Create_Task_At(volatile PD *p, voidfuncptr f , PRIORITY py, i
 static PID Kernel_Create_Task( voidfuncptr f , PRIORITY py, int arg) 
 {
 
-   if (Tasks == MAXPROCESS) return -1;  /* Too many task! */
+   if (Tasks == MAXPROCESS) {
+		error_msg=ERR_1_TOO_MANY_TASK;
+		OS_Abort();
+	}  
 
    /* find a DEAD PD that we can use  */
 
@@ -569,6 +582,16 @@ void OS_Init()
 	PORTA &= ~(1<<PA0);
 	PORTA &= ~(1<<PA1);
 	
+	DDRC |= (1<<PC0);	//pin 37
+	DDRC |= (1<<PC1);	//pin 36
+	DDRC |= (1<<PC2);	//pin 35
+	DDRC |= (1<<PC3);	//pin 34
+	PORTC &= ~(1<<PC0);	//pin 37 off
+	PORTC &= ~(1<<PC1);	//pin 36 off
+	PORTC &= ~(1<<PC2);	//pin 35 off
+	PORTC &= ~(1<<PC3);	//pin 34 off
+
+	
 	
 	set_timer();
 	
@@ -596,12 +619,56 @@ void OS_Init()
 	dead_pool_queue.head = &Process[0];
 	dead_pool_queue.tail = &Process[MAXPROCESS - 1];
 }
+static void _delay_25ms(void)
+{
+	uint16_t i;
+
+	/* 4 * 50000 CPU cycles = 25 ms */
+	asm volatile ("1: sbiw %0,1" "\n\tbrne 1b" : "=w" (i) : "0" (50000));
+}
+
 
 void OS_Abort(void)
 {
-	for(;;){
-		
+	int i=0;
+	int x;
+	switch (error_msg){
+		case ERR_1_TOO_MANY_TASK:
+				PORTC|=(1<<PC0);
+				break;
+		case ERR_2_TOO_MANY_MUTEX:
+				PORTC|=(1<<PC1);
+				break;
+		case ERR_3_NO_SUCH_TASK:
+				PORTC|=(1<<PC2);
+				break;
+		case ERR_4_NO_SUCH_MUTEX:
+				PORTC|=(1<<PC3);
+				break;
+		case FAIL_1_STACK_OVERFLOW:
+		for(;;){
+				PORTC|=(1<<PC1)|(1<<PC2)|(1<<PC3)|(1<<PC0);
+				_delay_25ms();
+				_delay_25ms();
+				_delay_25ms();
+				PORTC&=~(1<<PC1)&~(1<<PC2)&~(1<<PC3)&~(1<<PC0);
+				_delay_25ms();
+				_delay_25ms();
+				_delay_25ms();
 		}
+		case FAIL_2_DEADLOCK:
+		for(;;){
+				PORTC|=(1<<PC0)|(1<<PC3);
+				_delay_25ms();
+				_delay_25ms();
+				_delay_25ms();
+				PORTC&=~(1<<PC0)&~(1<<PC3);
+				_delay_25ms();
+				_delay_25ms();
+				_delay_25ms();
+				
+		}
+	}
 }
 
 /**
@@ -627,6 +694,9 @@ MUTEX Mutex_Init(void){
 			return x;
 		}
 	}
+	/*Too Many Mutex*/
+	error_msg=ERR_2_TOO_MANY_MUTEX;
+	OS_Abort();
 	return -1;
 }
 
@@ -770,12 +840,11 @@ void Task_Terminate()
    }
 }
 void Ping() 
+
 {
-  for(;;){
-	 Mutex_Lock(0);
-			 PORTA |= (1<<PA0);
-	 Mutex_Unlock(0);
-  }
+
+	error_msg=ERR_1_TOO_MANY_TASK;
+	OS_Abort();
 }
 
 
@@ -785,12 +854,7 @@ void Ping()
   */
 void Pong() 
 {
-  for(;;) {
-	  Mutex_Lock(0);
-	  			 PORTA &= ~(1<<PA0);
-	  Mutex_Unlock(0);
-	  Task_Yield();
-  }
+
 }
 
 void a_main(){
@@ -811,13 +875,14 @@ ISR(TIMER1_COMPA_vect)
 
 		curr = curr->next;
 	}
-	if(sleep_queue.head->tick == 0)
-	{
-		Cp->request = WAKE;
-		Enter_Kernel();
+	if(sleep_queue.head!=NULL){
+		if(sleep_queue.head->tick == 0)
+		{
+			Cp->request = WAKE;
+			Enter_Kernel();
+		}
+	}	
 	}
-
-}
 
 int main() 
 {

@@ -37,6 +37,11 @@ SUBDIRS :=
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
+../T11EventConsumable.c \
+../T10EventYield.c \
+../T9EventPreemption.c \
+../T8Sleep.c \
+../T7Mutex.c \
 ../T1Sleep.c \
 ../T5SleepQPreemption.c \
 ../T4Suspend.c \
@@ -54,6 +59,11 @@ ASM_SRCS +=
 
 
 OBJS +=  \
+T11EventConsumable.o \
+T10EventYield.o \
+T9EventPreemption.o \
+T8Sleep.o \
+T7Mutex.o \
 T1Sleep.o \
 T5SleepQPreemption.o \
 T4Suspend.o \
@@ -64,6 +74,11 @@ cswitch.o \
 T6MaxP.o
 
 OBJS_AS_ARGS +=  \
+T11EventConsumable.o \
+T10EventYield.o \
+T9EventPreemption.o \
+T8Sleep.o \
+T7Mutex.o \
 T1Sleep.o \
 T5SleepQPreemption.o \
 T4Suspend.o \
@@ -74,6 +89,11 @@ cswitch.o \
 T6MaxP.o
 
 C_DEPS +=  \
+T11EventConsumable.d \
+T10EventYield.d \
+T9EventPreemption.d \
+T8Sleep.d \
+T7Mutex.d \
 T1Sleep.d \
 T5SleepQPreemption.d \
 T4Suspend.d \
@@ -84,6 +104,11 @@ cswitch.d \
 T6MaxP.d
 
 C_DEPS_AS_ARGS +=  \
+T11EventConsumable.d \
+T10EventYield.d \
+T9EventPreemption.d \
+T8Sleep.d \
+T7Mutex.d \
 T1Sleep.d \
 T5SleepQPreemption.d \
 T4Suspend.d \
@@ -107,6 +132,16 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
+
+
+
+
+
+
+
+
 
 
 

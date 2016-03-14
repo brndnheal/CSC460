@@ -41,6 +41,8 @@ EVENT Event_Init(void);//Implement using event queue?
 void Event_Wait(EVENT e);
 void Event_Signal(EVENT e);
 
+void preemption();
+
 typedef void (*voidfuncptr) (void); 
 
 void a_main(void);
@@ -74,6 +76,7 @@ typedef enum process_states
    READY,
    BLOCKED,
    RUNNING,
+	WAITING,
    SLEEPING
 } PROCESS_STATES;
 
@@ -92,6 +95,9 @@ typedef enum kernel_request_type
 	RESUME,
 	LOCK,
 	UNLOCK,
+	EVENT_INIT,
+	EVENT_SIGNAL,
+	EVENT_WAIT,
    WAKE
 } KERNEL_REQUEST_TYPE;
 

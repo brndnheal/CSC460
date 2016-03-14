@@ -1,5 +1,4 @@
 /*
-
 #include <string.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -14,7 +13,7 @@ void Ping1()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping2()
@@ -22,7 +21,7 @@ void Ping2()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping3()
@@ -30,7 +29,7 @@ void Ping3()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping4()
@@ -38,7 +37,7 @@ void Ping4()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping5()
@@ -46,7 +45,7 @@ void Ping5()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping6()
@@ -54,7 +53,7 @@ void Ping6()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping7()
@@ -62,7 +61,7 @@ void Ping7()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping8()
@@ -70,7 +69,7 @@ void Ping8()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping9()
@@ -78,7 +77,7 @@ void Ping9()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping10()
@@ -86,7 +85,7 @@ void Ping10()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping11()
@@ -94,23 +93,7 @@ void Ping11()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
-}
-
-void Ping11()
-{
-	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
-	PORTA&=~(1<<PA2);
-	Task_Yield();
-	for(;;)
-}
-
-void Ping11()
-{
-	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
-	PORTA&=~(1<<PA2);
-	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping12()
@@ -118,7 +101,7 @@ void Ping12()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping13()
@@ -126,7 +109,7 @@ void Ping13()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping14()
@@ -134,7 +117,7 @@ void Ping14()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
 void Ping15()
@@ -142,28 +125,38 @@ void Ping15()
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
 
-void Ping16()
-{
-	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
-	PORTA&=~(1<<PA2);
-	Task_Yield();
-	for(;;)
-}
+
 
 void Ping17()
 {
 	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
 	PORTA&=~(1<<PA2);
 	Task_Yield();
-	for(;;)
+	for(;;);
 }
+
+void Ping16()
+{
+	
+	PORTA|=(1<<PA2);   // Flap pin 24 (on/off)
+	PORTA&=~(1<<PA2);
+
+	Task_Create(Ping17,1,0);
+	Task_Yield();
+	for(;;);
+}
+
 
 void a_main(){
 
-	DDRA |= (1<<PA2);	
+	DDRA |= (1<<PA0);
+	DDRA |= (1<<PA1);
+	DDRA |= (1<<PA2);
+	PORTA &= ~(1<<PA0);
+	PORTA &= ~(1<<PA1);
 	PORTA &= ~(1<<PA2);
 	
 	Task_Create(Ping1,1,0);
@@ -182,7 +175,6 @@ void a_main(){
 	Task_Create(Ping14,1,0);
 	Task_Create(Ping15,1,0);
 	Task_Create(Ping16,1,0);
-	Task_Create(Ping17,1,0);
 	
 	Task_Terminate();
 }

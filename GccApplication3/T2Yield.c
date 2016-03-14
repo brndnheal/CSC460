@@ -15,7 +15,6 @@ void Pang()
 		PORTA&=~(1<<PA0);
 		Task_Yield();
 	}
-	//
 }
 
 

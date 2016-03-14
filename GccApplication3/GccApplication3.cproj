@@ -110,6 +110,21 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="T11EventConsumable.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="T10EventYield.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="T9EventPreemption.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="T8Sleep.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="T7Mutex.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="T1Sleep.c">
       <SubType>compile</SubType>
     </Compile>

@@ -42,6 +42,10 @@ void Event_Signal(EVENT e);
 
 typedef void (*voidfuncptr) (void); 
 
+void a_main(void);
+
+//void Event_Wait(EVENT *e);
+//void Event_Wait_Next(EVENT *e);
 
 
 
@@ -115,5 +119,12 @@ typedef struct
 	volatile PD*  tail;
 }
 queue_t;
+
+/*typedef struct event{
+	// pid of waiting pro, -1 if none (send to waiting queue)
+	int8_t waiting_pid;
+	// TRUE, if event has outstanding occurence (ie. ^^^^^^)
+	bool signalled;
+} EVENT;*/
 
 #endif /* _OS_H_ */

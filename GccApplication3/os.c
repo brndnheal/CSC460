@@ -28,7 +28,7 @@
 
 
 #define WORKSPACE     256
-#define MAXPROCESS   8
+#define MAXPROCESS   16
 
 
 /*===========
@@ -147,18 +147,21 @@ static void enqueue_sleep(volatile PD* task_to_add)
 	int curr_rotations = 0;
 	int curr_remainder = 0;
 	
+	// empty
 	if(sleep_queue.head == NULL)
 	{
 		sleep_queue.head = task_to_add;
 		sleep_queue.tail = task_to_add;
 	}
-
+	// not empty
 	else 
 	{		
 		curr=sleep_queue.head;
 		prev=sleep_queue.head;
 		curr_rotations = curr->tick/max_timer;
 		curr_remainder = curr->tick % max_timer;
+		
+		// insert in front of curr
 		if(rotations<curr_rotations)
 		{
 			sleep_queue.head=task_to_add;
@@ -184,7 +187,7 @@ static void enqueue_sleep(volatile PD* task_to_add)
 				if (rotations<curr_rotations)
 				{
 					prev->next = task_to_add;
-					task_to_add = curr;
+					task_to_add->next = curr;   // correction
 					return;
 				}
 				else if (rotations == curr_rotations)
@@ -192,7 +195,7 @@ static void enqueue_sleep(volatile PD* task_to_add)
 					if (remainder<curr_remainder)
 					{
 						prev->next = task_to_add;
-						task_to_add = curr;
+						task_to_add->next = curr;   // correction
 						return;
 					}
 				}
@@ -483,6 +486,7 @@ static void Next_Kernel_Request()
 		  p = dequeue(&sleep_queue);
 		  enqueue(&ready_queue[p->priority], p);
 		  preemption();
+		  break;   // another change here
        default:
           /* Houston! we have a problem here! */
           break;
@@ -522,7 +526,7 @@ void set_timer()
 void OS_Init() 
 {
 
-	DDRA= (1<<PA0);
+	DDRA|= (1<<PA0);
 	DDRA |= (1<<PA1);
 	PORTA &= ~(1<<PA0);
 	PORTA &= ~(1<<PA1);
@@ -675,85 +679,7 @@ void Task_Terminate()
 }
 
 
-void Ping2(){
-	int x;
-	for(;;) {
-		//PORTA &= ~(1<<PA0);   turn off
-		PORTA |= (1<<PA0);  // turn on
-		PORTA &= ~(1<<PA0); 
-		/*for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);*/
-		Task_Sleep(500);
-	}
-}
-/**
-  * A cooperative "Ping" task.
-  * Added testing code for LEDs.
-  */
 
-void Pong2(){
-	int x;
-	PID p;
-	//p=Task_Create(Ping2,0,0);
-			//Task_Suspend(p);
-	for(;;) {
-		PORTA |= (1<<PA0);
-		PORTA &= ~(1<<PA0); 
-		//LED on
- // turn on
-		//PORTA &= ~(1<<PA0);  // turn off
-		/*for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);*/
-
-	//	Task_Suspend(p);
-	//	Task_Resume(p);
-		Task_Sleep(500);
-	//	Task_Yield();
-		//PORTA &= ~(1<<PA0);
-		/*for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);
-		for(x=0;x<32000;x++);*/
-	}
-}
-void Ping() 
-{
-	int x;
-//	PORTA &= ~(1<<PA0);
-	for(x=0;x<32000;x++);
-	for(x=0;x<32000;x++);
-	for(x=0;x<32000;x++);
-	for(x=0;x<32000;x++);
-	Task_Create(Pong2,0,0);
-  for(;;){
-	  Task_Yield();
-
-  }
-}
-
-
-/**
-  * A cooperative "Pong" task.
-  * Added testing code for LEDs.
-  */
-void Pong() 
-{
-	//PORTA &= ~(1<<PA0);  
-	Task_Create(Ping,1,0);
-  for(;;) {
-		Task_Yield(); 
-  }
-}
-
-void a_main(){
-	 Task_Create(Pong,5,0);
-	 Task_Terminate();
- }
- 
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -766,10 +692,12 @@ ISR(TIMER1_COMPA_vect)
 
 		curr = curr->next;
 	}
-	if(sleep_queue.head->tick == 0)
-	{
-		Cp->request = WAKE;
-		Enter_Kernel();
+	if(sleep_queue.head!=NULL){
+		if(sleep_queue.head->tick == 0)
+		{
+			Cp->request = WAKE;
+			Enter_Kernel();
+		}
 	}
 
 }
@@ -780,4 +708,3 @@ int main()
    Task_Create( a_main , 0, 0 );
    OS_Start();
 }
-

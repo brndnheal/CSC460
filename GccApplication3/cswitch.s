@@ -199,7 +199,7 @@ Enter_Kernel:
           */
         in   r30, SPL
         in   r31, SPH
-		  in   r16, EIND
+		in   r16, EIND
         sts  CurrentSp, r30
         sts  CurrentSp+1, r31
         /*
@@ -210,7 +210,7 @@ Enter_Kernel:
         lds  r31, KernelSp+1
         out  SPL, r30
         out  SPH, r31
-		  out  EIND, r16
+		out  EIND, r16
         /*
           * We are now executing in kernel's stack.
           */

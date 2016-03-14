@@ -37,6 +37,9 @@ SUBDIRS :=
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
+../T6MaxP.c \
+../T5Sleep.c \
+../T1Sleep.c \
 ../os.c
 
 
@@ -48,18 +51,30 @@ ASM_SRCS +=
 
 
 OBJS +=  \
+T6MaxP.o \
+T5Sleep.o \
+T1Sleep.o \
 os.o \
 cswitch.o
 
 OBJS_AS_ARGS +=  \
+T6MaxP.o \
+T5Sleep.o \
+T1Sleep.o \
 os.o \
 cswitch.o
 
 C_DEPS +=  \
+T6MaxP.d \
+T5Sleep.d \
+T1Sleep.d \
 os.d \
 cswitch.d
 
 C_DEPS_AS_ARGS +=  \
+T6MaxP.d \
+T5Sleep.d \
+T1Sleep.d \
 os.d \
 cswitch.d
 
@@ -77,6 +92,12 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
+
+
+
+
 
 
 

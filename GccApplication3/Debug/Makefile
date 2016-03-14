@@ -37,7 +37,10 @@ SUBDIRS :=
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
-../TC13ProvidedCase1.c \
+../T15ProvidedCase3.c \
+../T16ProvidedCase4.c \
+../T14ProvidedCase2.c \
+../T13ProvidedCase1.c \
 ../T12MutexPriInheritance.c \
 ../T11EventConsumable.c \
 ../T10EventYield.c \
@@ -61,7 +64,10 @@ ASM_SRCS +=
 
 
 OBJS +=  \
-TC13ProvidedCase1.o \
+T15ProvidedCase3.o \
+T16ProvidedCase4.o \
+T14ProvidedCase2.o \
+T13ProvidedCase1.o \
 T12MutexPriInheritance.o \
 T11EventConsumable.o \
 T10EventYield.o \
@@ -78,7 +84,10 @@ cswitch.o \
 T6MaxP.o
 
 OBJS_AS_ARGS +=  \
-TC13ProvidedCase1.o \
+T15ProvidedCase3.o \
+T16ProvidedCase4.o \
+T14ProvidedCase2.o \
+T13ProvidedCase1.o \
 T12MutexPriInheritance.o \
 T11EventConsumable.o \
 T10EventYield.o \
@@ -95,7 +104,10 @@ cswitch.o \
 T6MaxP.o
 
 C_DEPS +=  \
-TC13ProvidedCase1.d \
+T15ProvidedCase3.d \
+T16ProvidedCase4.d \
+T14ProvidedCase2.d \
+T13ProvidedCase1.d \
 T12MutexPriInheritance.d \
 T11EventConsumable.d \
 T10EventYield.d \
@@ -112,7 +124,10 @@ cswitch.d \
 T6MaxP.d
 
 C_DEPS_AS_ARGS +=  \
-TC13ProvidedCase1.d \
+T15ProvidedCase3.d \
+T16ProvidedCase4.d \
+T14ProvidedCase2.d \
+T13ProvidedCase1.d \
 T12MutexPriInheritance.d \
 T11EventConsumable.d \
 T10EventYield.d \
@@ -142,6 +157,12 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
+
+
+
+
 
 
 

@@ -37,10 +37,13 @@ SUBDIRS :=
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
-../T6MaxP.c \
-../T5Sleep.c \
 ../T1Sleep.c \
-../os.c
+../T5SleepQPreemption.c \
+../T4Suspend.c \
+../T3Preemption.c \
+../T2Yield.c \
+../os.c \
+../T6MaxP.c
 
 
 PREPROCESSING_SRCS +=  \
@@ -51,32 +54,44 @@ ASM_SRCS +=
 
 
 OBJS +=  \
-T6MaxP.o \
-T5Sleep.o \
 T1Sleep.o \
+T5SleepQPreemption.o \
+T4Suspend.o \
+T3Preemption.o \
+T2Yield.o \
 os.o \
-cswitch.o
+cswitch.o \
+T6MaxP.o
 
 OBJS_AS_ARGS +=  \
-T6MaxP.o \
-T5Sleep.o \
 T1Sleep.o \
+T5SleepQPreemption.o \
+T4Suspend.o \
+T3Preemption.o \
+T2Yield.o \
 os.o \
-cswitch.o
+cswitch.o \
+T6MaxP.o
 
 C_DEPS +=  \
-T6MaxP.d \
-T5Sleep.d \
 T1Sleep.d \
+T5SleepQPreemption.d \
+T4Suspend.d \
+T3Preemption.d \
+T2Yield.d \
 os.d \
-cswitch.d
+cswitch.d \
+T6MaxP.d
 
 C_DEPS_AS_ARGS +=  \
-T6MaxP.d \
-T5Sleep.d \
 T1Sleep.d \
+T5SleepQPreemption.d \
+T4Suspend.d \
+T3Preemption.d \
+T2Yield.d \
 os.d \
-cswitch.d
+cswitch.d \
+T6MaxP.d
 
 OUTPUT_FILE_PATH +=GccApplication3.elf
 
@@ -92,6 +107,12 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
+
+
+
+
 
 
 

@@ -14,10 +14,11 @@
 #endif
 
 typedef unsigned int PID;        // always non-zero if it is valid
-typedef unsigned int MUTEX;      // always non-zero if it is valid
+
 typedef unsigned char PRIORITY;
 typedef unsigned int EVENT;      // always non-zero if it is valid
 typedef unsigned int TICK;
+typedef unsigned int MUTEX;
 
 
 // void OS_Init(void);      redefined as main()
@@ -44,11 +45,12 @@ typedef void (*voidfuncptr) (void);
 
 void a_main(void);
 
-//void Event_Wait(EVENT *e);
-//void Event_Wait_Next(EVENT *e);
-
-
-
+typedef enum mutex_states
+{
+	OPEN = 0,
+	FREE,
+	LOCKED
+} MUTEX_STATES;
 
 
 typedef struct create_args
@@ -86,8 +88,10 @@ typedef enum kernel_request_type
    TERMINATE,
    SLEEP,
    SUSPEND,
-   YIELD,
-   RESUME,
+	YIELD,
+	RESUME,
+	LOCK,
+	UNLOCK,
    WAKE
 } KERNEL_REQUEST_TYPE;
 
@@ -104,6 +108,7 @@ struct ProcessDescriptor
 	//Added by Brendan
 	TICK tick;
 	PRIORITY priority;
+	PRIORITY past;
 	PID pid;
 	unsigned int arg;
 	unsigned int arg2;
@@ -120,11 +125,15 @@ typedef struct
 }
 queue_t;
 
-/*typedef struct event{
-	// pid of waiting pro, -1 if none (send to waiting queue)
-	int8_t waiting_pid;
-	// TRUE, if event has outstanding occurence (ie. ^^^^^^)
-	bool signalled;
-} EVENT;*/
+
+typedef struct Mutex_Descriptor MD;
+
+typedef struct Mutex_Descriptor
+{
+	MUTEX_STATES state;
+	volatile PD* owner;
+	queue_t* mutex_queue;
+	volatile unsigned int count;
+};
 
 #endif /* _OS_H_ */

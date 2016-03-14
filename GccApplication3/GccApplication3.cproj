@@ -110,6 +110,9 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="TC13ProvidedCase1.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="T12MutexPriInheritance.c">
       <SubType>compile</SubType>
     </Compile>

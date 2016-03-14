@@ -2,6 +2,8 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
+TC13ProvidedCase1.c
+
 T12MutexPriInheritance.c
 
 T11EventConsumable.c

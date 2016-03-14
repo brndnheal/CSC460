@@ -9,6 +9,12 @@
 // P1 sleep              lock(attept)            lock
 // P2      sleep                     signal
 // P3           lock wait                  unlock
+#include "os.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
+
+#define F_CPU 16000000UL
+#include <util/delay.h>
 
 MUTEX mut;
 EVENT evt;
@@ -16,7 +22,7 @@ EVENT evt;
 void Task_P1()
 {
 	PORTA |= (1<<PA1);
-	Task_Sleep(10); // sleep 100ms
+	Task_Sleep(10); // sleep 100
 	Mutex_Lock(mut);
 	PORTA &= ~(1<<PA1);
     for(;;);

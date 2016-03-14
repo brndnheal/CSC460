@@ -110,6 +110,9 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="T12MutexPriInheritance.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="T11EventConsumable.c">
       <SubType>compile</SubType>
     </Compile>

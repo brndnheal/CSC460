@@ -138,7 +138,7 @@ typedef struct Mutex_Descriptor
 {
 	MUTEX_STATES state;
 	volatile PD* owner;
-	queue_t* mutex_queue;
+	volatile queue_t mutex_queue;
 	volatile unsigned int count;
 };
 

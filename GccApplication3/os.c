@@ -82,7 +82,7 @@ static queue_t dead_pool_queue;
 static queue_t event_queue[MAXEVENT];
 static int signal[MAXEVENT];
 static uint8_t num_events_created = 0;
-static volatile MUTEX* mutex_unlock_arg;
+static volatile MUTEX mutex_unlock_arg;
 
 
 
@@ -488,9 +488,11 @@ static void kernel_event_signal()
 		if(event_queue[handle].head != NULL)
 		{
 			/* The signalled task */
-			PD* task_ptr = dequeue(&event_queue[handle]);
+			volatile PD* task_ptr = dequeue(&event_queue[handle]);
+			event_queue[handle].head = NULL;
+			event_queue[handle].tail = NULL;
 			task_ptr->state =RUNNING;
-			enqueue(&ready_queue,task_ptr);
+			enqueue(&ready_queue[task_ptr->priority],task_ptr);
 			preemption();
 			
 		}
@@ -500,56 +502,6 @@ static void kernel_event_signal()
 	}
 }
 
-EVENT Event_Init(void)
-{
-    EVENT event_ptr;
-    uint8_t sreg;
-    sreg = SREG;
-    Disable_Interrupt();
-
-    Cp->request = EVENT_INIT;
-	 Enter_Kernel();
-
-    event_ptr = (EVENT)*kernel_request_event_ptr;
-
-    SREG = sreg;
-
-    return event_ptr;
-}
-
-
-/**
-  * @brief Wait for the next occurrence of a signal on \a e. The calling process always blocks.
-  * 
-  * @param e  an Event descriptor
-  */
-void Event_Wait(EVENT e)
-{
-    uint8_t sreg;
-
-    sreg = SREG;
-
-	 if (event_queue[e].head==NULL){
-		 Disable_Interrupt();
-		 Cp->request = EVENT_WAIT;
-		 kernel_request_event_ptr = &e;
-		 Enter_Kernel();
-	 }
-    SREG = sreg;
-}
-
-
-void Event_Signal(EVENT e)
-{
-    uint8_t sreg;
-
-    sreg = SREG;
-    Disable_Interrupt();
-    Cp->request = EVENT_SIGNAL;
-    kernel_request_event_ptr = &e;
-    Enter_Kernel();
-    SREG = sreg;
-}
 
 void preemption(){
 	if(check_rqueue()){
@@ -561,6 +513,43 @@ void preemption(){
 		
 		Dispatch();
 	}
+}
+
+static volatile PD* find_in_ready(PID pid){
+	int i;
+	
+	volatile PD* curr;
+	volatile PD* prev;
+	for (i=0;i<11;i++){
+		curr= ready_queue[i].head;
+		if (curr->pid==pid){
+			ready_queue[i].head=curr->next;
+			if (ready_queue[i].head==ready_queue[i].tail) {
+				ready_queue[i].head=NULL;
+				ready_queue[i].tail=NULL;
+			}
+			curr->next =NULL;
+			return curr;
+		}
+		else{
+			prev=curr;
+			curr=prev->next;
+			while (curr!=NULL){
+				if  (curr->pid==pid){
+						prev->next=curr->next;
+						if(curr==ready_queue[i].tail){
+							ready_queue[i].tail=prev;
+						}
+						curr->next=NULL;
+						return curr;
+				}
+				prev=prev->next;
+				curr=curr->next;
+			}
+		}
+		
+	}
+	return NULL;
 }
 /**
   * This internal kernel function is the "main" driving loop of this full-served
@@ -622,7 +611,7 @@ static void Next_Kernel_Request()
 	   case NONE:
 	//shouldn't happen
           break;
-       case TERMINATE:
+      case TERMINATE:
           /* deallocate all resources used by this task */
 			 if(Cp!=idle_task){
 				 Cp->state = DEAD;
@@ -645,62 +634,67 @@ static void Next_Kernel_Request()
 		  break;
 		  
 		case LOCK:
-			if(Mutex[*mutex_unlock_arg].state==FREE){
-				
-				Mutex[*mutex_unlock_arg].state=LOCKED;
-				Mutex[*mutex_unlock_arg].owner=Cp;
-				Mutex[*mutex_unlock_arg].count=1;
+			if(Mutex[mutex_unlock_arg].state==FREE){
+				Mutex[mutex_unlock_arg].state=LOCKED;
+				Mutex[mutex_unlock_arg].owner=Cp;
+				Mutex[mutex_unlock_arg].count=1;
 			}
-			else if(Mutex[*mutex_unlock_arg].state==LOCKED&&(Mutex[*mutex_unlock_arg].owner==Cp)){
-				++Mutex[*mutex_unlock_arg].count;
+			else if(Mutex[mutex_unlock_arg].state==LOCKED&&(Mutex[mutex_unlock_arg].owner==Cp)){
+				++Mutex[mutex_unlock_arg].count;
 			}
 			else{
 				Cp->state=BLOCKED;
-				enqueue(Mutex[*mutex_unlock_arg].mutex_queue,Cp);
+				enqueue(&Mutex[mutex_unlock_arg].mutex_queue,Cp);
 				
 				//Priority Inheritance
-				if(Mutex[*mutex_unlock_arg].owner->priority<Cp->priority){
-					if(Mutex[*mutex_unlock_arg].owner->past==-1){
-						Mutex[*mutex_unlock_arg].owner->past= Mutex[*mutex_unlock_arg].owner->priority;
+				if(Mutex[mutex_unlock_arg].owner->priority>Cp->priority){
+					if(Mutex[mutex_unlock_arg].owner->past==-1){
+						Mutex[mutex_unlock_arg].owner->past= Mutex[mutex_unlock_arg].owner->priority;
 					}
-					Mutex[*mutex_unlock_arg].owner->priority=Cp->priority;
+					Mutex[mutex_unlock_arg].owner->priority=Cp->priority;
+					volatile PD * p = find_in_ready(Mutex[mutex_unlock_arg].owner->pid);
+					if(p!=NULL){
+						enqueue(&ready_queue[Mutex[mutex_unlock_arg].owner->priority],Mutex[mutex_unlock_arg].owner);
+					}
 				}
-				
 				Dispatch();
 			}
 			break;
-
+			
 		case UNLOCK:
-			if(Mutex[*mutex_unlock_arg].owner!=Cp){
+			if(Mutex[mutex_unlock_arg].owner!=Cp){
 				error_msg= FAIL_2_DEADLOCK;
 				OS_Abort();
 			}
-			else if(Mutex[*mutex_unlock_arg].state==LOCKED&&Mutex[*mutex_unlock_arg].count>1){
-				--Mutex[*mutex_unlock_arg].count;
+			else if(Mutex[mutex_unlock_arg].state==LOCKED&&Mutex[mutex_unlock_arg].count>1){
+				--Mutex[mutex_unlock_arg].count;
 			}
-			else if(Mutex[*mutex_unlock_arg].mutex_queue->head!=NULL){
-				volatile PD* p=dequeue(Mutex[*mutex_unlock_arg].mutex_queue);
+			else if(Mutex[mutex_unlock_arg].mutex_queue.head!=NULL){
+				volatile PD* p=dequeue(&Mutex[mutex_unlock_arg].mutex_queue);
 				
 				
 				//Priority Inheritance
-				if(Mutex[*mutex_unlock_arg].owner->priority>p->priority){
+				if(Mutex[mutex_unlock_arg].owner->priority<p->priority){
 					if(p->past==-1){
 						p->past=p->priority;
 					}
-					p->priority=Mutex[*mutex_unlock_arg].owner->priority;
+					p->priority=Mutex[mutex_unlock_arg].owner->priority;
 				}
-				Mutex[*mutex_unlock_arg].owner->priority=Mutex[*mutex_unlock_arg].owner->past;
-				Mutex[*mutex_unlock_arg].owner->past=-1;
-				Mutex[*mutex_unlock_arg].owner=p;
+				if( Mutex[mutex_unlock_arg].owner->past >-1){
+					Mutex[mutex_unlock_arg].owner->priority=Mutex[mutex_unlock_arg].owner->past;
+					Mutex[mutex_unlock_arg].owner->past=-1;
+				}
+				Mutex[mutex_unlock_arg].owner=p;
 				p->state=READY;
 				enqueue(&ready_queue[p->priority],p);
 				preemption();
 			}
 			else{
-				Mutex[*mutex_unlock_arg].state=FREE;
-				Mutex[*mutex_unlock_arg].count=0;
+				Mutex[mutex_unlock_arg].state=FREE;
+				Mutex[mutex_unlock_arg].count=0;
 			}
 			break;	
+		
 		case EVENT_INIT:
         kernel_request_event_ptr = NULL;
         if(num_events_created < MAXEVENT)
@@ -726,6 +720,7 @@ static void Next_Kernel_Request()
 		case EVENT_SIGNAL:
 			kernel_event_signal();
 			break;
+			
       default:
          break;
        }
@@ -793,8 +788,8 @@ void OS_Init()
 		
 		Mutex[x].state=OPEN;
 		Mutex[x].owner=NULL;
-		Mutex[x].mutex_queue->head=NULL;
-		Mutex[x].mutex_queue->tail=NULL;
+		Mutex[x].mutex_queue.head=NULL;
+		Mutex[x].mutex_queue.tail=NULL;
 		Mutex[x].count=0;
 			
 	}
@@ -898,7 +893,7 @@ void Mutex_Lock(MUTEX m){
 		sreg=SREG;
 		Disable_Interrupt();
 		Cp->request=LOCK;
-		mutex_unlock_arg=&m;
+		mutex_unlock_arg=m;
 		Enter_Kernel();
 		SREG=sreg;
 }
@@ -908,7 +903,7 @@ void Mutex_Unlock(MUTEX m){
 		sreg=SREG;
 		Disable_Interrupt();
 		Cp->request=UNLOCK;
-		mutex_unlock_arg=&m;
+		mutex_unlock_arg=m;
 		Enter_Kernel();
 		SREG=sreg;
 }
@@ -1028,6 +1023,57 @@ void Task_Terminate()
 
 }
 
+
+EVENT Event_Init(void)
+{
+    EVENT event_ptr;
+    uint8_t sreg;
+    sreg = SREG;
+    Disable_Interrupt();
+
+    Cp->request = EVENT_INIT;
+	 Enter_Kernel();
+
+    event_ptr = (EVENT)*kernel_request_event_ptr;
+
+    SREG = sreg;
+
+    return event_ptr;
+}
+
+
+/**
+  * @brief Wait for the next occurrence of a signal on \a e. The calling process always blocks.
+  * 
+  * @param e  an Event descriptor
+  */
+void Event_Wait(EVENT e)
+{
+    uint8_t sreg;
+
+    sreg = SREG;
+
+	 if (event_queue[e].head==NULL){
+		 Disable_Interrupt();
+		 Cp->request = EVENT_WAIT;
+		 kernel_request_event_ptr = &e;
+		 Enter_Kernel();
+	 }
+    SREG = sreg;
+}
+
+
+void Event_Signal(EVENT e)
+{
+    uint8_t sreg;
+
+    sreg = SREG;
+    Disable_Interrupt();
+    Cp->request = EVENT_SIGNAL;
+    kernel_request_event_ptr = &e;
+    Enter_Kernel();
+    SREG = sreg;
+}
 
 
 ISR(TIMER1_COMPA_vect)

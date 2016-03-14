@@ -37,6 +37,7 @@ SUBDIRS :=
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
+../T12MutexPriInheritance.c \
 ../T11EventConsumable.c \
 ../T10EventYield.c \
 ../T9EventPreemption.c \
@@ -59,6 +60,7 @@ ASM_SRCS +=
 
 
 OBJS +=  \
+T12MutexPriInheritance.o \
 T11EventConsumable.o \
 T10EventYield.o \
 T9EventPreemption.o \
@@ -74,6 +76,7 @@ cswitch.o \
 T6MaxP.o
 
 OBJS_AS_ARGS +=  \
+T12MutexPriInheritance.o \
 T11EventConsumable.o \
 T10EventYield.o \
 T9EventPreemption.o \
@@ -89,6 +92,7 @@ cswitch.o \
 T6MaxP.o
 
 C_DEPS +=  \
+T12MutexPriInheritance.d \
 T11EventConsumable.d \
 T10EventYield.d \
 T9EventPreemption.d \
@@ -104,6 +108,7 @@ cswitch.d \
 T6MaxP.d
 
 C_DEPS_AS_ARGS +=  \
+T12MutexPriInheritance.d \
 T11EventConsumable.d \
 T10EventYield.d \
 T9EventPreemption.d \
@@ -132,6 +137,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

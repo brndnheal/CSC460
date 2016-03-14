@@ -14,10 +14,11 @@
 #endif
 
 typedef unsigned int PID;        // always non-zero if it is valid
-typedef unsigned int MUTEX;      // always non-zero if it is valid
+
 typedef unsigned char PRIORITY;
 typedef unsigned int EVENT;      // always non-zero if it is valid
 typedef unsigned int TICK;
+typedef unsigned int MUTEX;
 
 
 // void OS_Init(void);      redefined as main()
@@ -42,9 +43,14 @@ void Event_Signal(EVENT e);
 
 typedef void (*voidfuncptr) (void); 
 
+void a_main(void);
 
-
-
+typedef enum mutex_states
+{
+	OPEN = 0,
+	FREE,
+	LOCKED
+} MUTEX_STATES;
 
 
 typedef struct create_args
@@ -84,8 +90,8 @@ typedef enum kernel_request_type
    SUSPEND,
 	YIELD,
 	RESUME,
-	BLOCK,
-	UNBLOCK,
+	LOCK,
+	UNLOCK,
    WAKE
 } KERNEL_REQUEST_TYPE;
 
@@ -118,5 +124,15 @@ typedef struct
 	volatile PD*  tail;
 }
 queue_t;
+
+typedef struct Mutex_Descriptor MD;
+
+typedef struct Mutex_Descriptor
+{
+	MUTEX_STATES state;
+	volatile PD* owner;
+	queue_t* mutex_queue;
+	volatile unsigned int count;
+};
 
 #endif /* _OS_H_ */

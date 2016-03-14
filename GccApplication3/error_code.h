@@ -25,7 +25,7 @@ ERR_4_NO_SUCH_MUTEX,
 /** Stack space too large.*/
 FAIL_1_STACK_OVERFLOW,
 /** Mutex deadlock.*/
-FAIL_2_DEADLOCK,
+FAIL_2_DEADLOCK
 };
 
 

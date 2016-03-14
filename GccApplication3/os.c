@@ -1,5 +1,4 @@
 
-
 #include <string.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -31,7 +30,8 @@
 
 
 #define WORKSPACE     256
-#define MAXPROCESS   8
+#define MAXPROCESS   16
+
 
 
 /*===========
@@ -63,7 +63,7 @@ extern void Enter_Kernel();
 
 #define Disable_Interrupt()		asm volatile ("cli"::)
 #define Enable_Interrupt()		asm volatile ("sei"::)
-  
+#define STACK_SREG_SET_I_BIT()    asm volatile (\"ori    r31, 0x80        \n\t"::);
 
 
 /**
@@ -71,16 +71,17 @@ extern void Enter_Kernel();
   * state a task is in.
   */
 
-volatile static PD Process[MAXPROCESS];
-volatile static MUTEX Mutex[MAXMUTEX];
+volatile static PD Process[MAXPROCESS+1];
+volatile static PD* idle_task = &Process[MAXPROCESS];
+volatile static MD Mutex[MAXMUTEX];
 
-static queue_t mutex_queue[MAXMUTEX];
 static queue_t ready_queue[11];
 static queue_t sleep_queue;
 static queue_t dead_pool_queue;
 static volatile MUTEX mutex_unlock_arg;
 
-static int max_timer = INT_MAX;
+
+//static int max_timer = INT_MAX;
 static uint8_t volatile error_msg;
 
 volatile int preempt=0;
@@ -119,7 +120,11 @@ volatile static unsigned int Tasks;
 
 static volatile create_args kernel_request_create_args;
 
-
+static void idle (void)
+{
+	for(;;)
+	{};
+}
 
 static void enqueue(queue_t* queue_ptr, volatile PD* task_to_add)
 {
@@ -145,13 +150,13 @@ static void enqueue_sleep(volatile PD* task_to_add)
 	task_to_add->next = NULL;
 	volatile PD *curr;
 	volatile PD *prev;
-	
+	/*
 	int rotations = task_to_add->tick / max_timer;
 	int remainder = task_to_add->tick % max_timer;
 	
 	int curr_rotations = 0;
 	int curr_remainder = 0;
-	
+	*/
 	if(sleep_queue.head == NULL)
 	{
 		sleep_queue.head = task_to_add;
@@ -162,51 +167,56 @@ static void enqueue_sleep(volatile PD* task_to_add)
 	{		
 		curr=sleep_queue.head;
 		prev=sleep_queue.head;
+		/*
 		curr_rotations = curr->tick/max_timer;
 		curr_remainder = curr->tick % max_timer;
-		if(rotations<curr_rotations)
+		*/
+		if(task_to_add->tick < curr->tick)
 		{
 			sleep_queue.head=task_to_add;
 			task_to_add->next=curr;
+			return;
 		}
-		else if(rotations==curr_rotations)
+		
+		/*else if(rotations==curr_rotations)
 		{
 			if(remainder<curr_remainder)
 			{
 				sleep_queue.head=task_to_add;
 				task_to_add->next=curr;
 			}	
-		}
+		}*/
 
 		else
 		{
 			curr = prev->next;
 			while (curr != NULL)
 			{
+				/*
 				curr_rotations = curr->tick/max_timer;
 				curr_remainder = curr->tick % max_timer;
-
-				if (rotations<curr_rotations)
+				*/
+				if (task_to_add->tick<curr->tick)
 				{
 					prev->next = task_to_add;
-					task_to_add = curr;
+					task_to_add->next = curr;
 					return;
 				}
-				else if (rotations == curr_rotations)
+			/*	else if (rotations == curr_rotations)
 				{
 					if (remainder<curr_remainder)
 					{
 						prev->next = task_to_add;
-						task_to_add = curr;
+						task_to_add->next = curr;
 						return;
 					}
-				}
+				}*/
 				prev=prev->next;
 				curr=curr->next;
 			}
-			prev->next=task_to_add;
-			sleep_queue.tail=task_to_add;
 		}
+		prev->next=task_to_add;
+		sleep_queue.tail=task_to_add;
 	}
 
 }
@@ -250,10 +260,13 @@ static volatile PD* dequeue_from_ready(queue_t* queue_ptr)
 	if(queue_ptr->head != NULL)
 	{
 		if (current->suspend==0){
-				if (queue_ptr->tail==current){
+				if (queue_ptr->tail==queue_ptr->head){
 					queue_ptr->tail=NULL;
+					queue_ptr->head=NULL;
 				}
-			queue_ptr->head=current->next;
+				else{
+					queue_ptr->head=current->next;
+				}
 			current->next=NULL;
 			return current;
 		}
@@ -272,6 +285,7 @@ static volatile PD* dequeue_from_ready(queue_t* queue_ptr)
 			current=current->next;
 		}
 	}
+	error_msg=ERR_3_NO_SUCH_TASK;
 	OS_Abort();
 	return current;
 	//Error nothing valid in queue
@@ -293,7 +307,7 @@ static volatile PD* dequeue_from_ready(queue_t* queue_ptr)
 static void Kernel_Create_Task_At(volatile PD *p, voidfuncptr f , PRIORITY py, int arg) 
 {   
    unsigned char *sp;
-   //Changed -2 to -1 to fix off by one error.
+   //Changed -2 to -1 to fix off by one error.s
    sp = (unsigned char *) &(p->workSpace[WORKSPACE-1]);
 
 
@@ -344,11 +358,15 @@ static PID Kernel_Create_Task( voidfuncptr f , PRIORITY py, int arg)
 		error_msg=ERR_1_TOO_MANY_TASK;
 		OS_Abort();
 	}  
-
+	volatile PD* p;
    /* find a DEAD PD that we can use  */
-
-   volatile PD* p=dequeue(&dead_pool_queue);
-
+	if(py==11){
+		p=&Process[MAXPROCESS];
+	}
+	else{
+		
+		p=dequeue(&dead_pool_queue);
+	}
    ++Tasks;
    Kernel_Create_Task_At( p, f ,py, arg);
    return p->pid;
@@ -370,28 +388,34 @@ static void Dispatch()
 	int i;
 	int found=0;
 	volatile PD* current;
+	//while(Cp->state!=RUNNING){
+		
+	if(Cp->state != RUNNING || Cp == idle_task)
+	{
+			for (i=0;i<11;i++){
+				current=ready_queue[i].head;
+				while(current!=NULL){
+					if(!current->suspend){
+						Cp=dequeue_from_ready(&ready_queue[i]);
+						CurrentSp = Cp->sp;
+						Cp->state = RUNNING;
+						found=1;
+						Enable_Interrupt();
+						break;
+					}
+					current=current->next;
+				}
 	
-	for (i=0;i<11;i++){
-		current=ready_queue[i].head;
-		while(current!=NULL){
-			if(!current->suspend){
-				Cp=dequeue_from_ready(&ready_queue[i]);
-				CurrentSp = Cp->sp;
-				Cp->state = RUNNING;
-				found=1;
-				Enable_Interrupt();
+			if (found){
 				break;
 			}
-			current=current->next;
 		}
-		if (found){
-			break;
+		if(!found){
+			Cp=idle_task;
+			
 		}
 	}
-	if(!found){
-		//error;
-		//OS_Abort();
-	}
+	
 
 }
 
@@ -442,8 +466,7 @@ static void Next_Kernel_Request()
    while(1) {
        /* activate this newly selected task */
       CurrentSp = Cp->sp;
-		if(Cp->suspend){
-		//error!!!	
+		if(Cp->suspend){	
 			OS_Abort();
 		}
       Exit_Kernel();    /* or CSwitch() */
@@ -490,12 +513,13 @@ static void Next_Kernel_Request()
           break;
        case TERMINATE:
           /* deallocate all resources used by this task */
-          Cp->state = DEAD;
-			 enqueue(&dead_pool_queue,Cp);
-          Dispatch();
+			 if(Cp!=idle_task){
+				 Cp->state = DEAD;
+				 enqueue(&dead_pool_queue,Cp);
+				 Dispatch();
+			 }
           break;
 	   case SLEEP:
-		  Cp->state = SLEEPING;
 		  // now enqueue based on sleep time
 		  // enqueue to sleep queue in sleep call
 		  enqueue_sleep(Cp);		  
@@ -503,39 +527,67 @@ static void Next_Kernel_Request()
 		  break;
 	   case WAKE:
 		  p = dequeue(&sleep_queue);
+		  p->state=READY;
 		  enqueue(&ready_queue[p->priority], p);
 		  preemption();
-			
-		case BLOCK:
-			Cp->state=BLOCKED;
-			enqueue(&mutex_queue[mutex_unlock_arg],Cp);
-			Dispatch();
+		  break;
+		  
+		case LOCK:
+			if(Mutex[mutex_unlock_arg].state==FREE){
+				
+				Mutex[mutex_unlock_arg].state=LOCKED;
+				Mutex[mutex_unlock_arg].owner=Cp;
+				Mutex[mutex_unlock_arg].count=1;
+			}
+			else if(Mutex[mutex_unlock_arg].state==LOCKED&&(Mutex[mutex_unlock_arg].owner==Cp)){
+				++Mutex[mutex_unlock_arg].count;
+			}
+			else{
+				Cp->state=BLOCKED;
+				enqueue(Mutex[mutex_unlock_arg].mutex_queue,Cp);
+				
+				/*Priority Inheritance*/
+				if(Mutex[mutex_unlock_arg].owner->priority<Cp->priority){
+					if(Mutex[mutex_unlock_arg].owner->past==-1){
+						Mutex[mutex_unlock_arg].owner->past= Mutex[mutex_unlock_arg].owner->priority;
+					}
+					Mutex[mutex_unlock_arg].owner->priority=Cp->priority;
+				}
+		
+				Dispatch();
+			}
 			break;
 
-		case UNBLOCK:
-				if(mutex_queue[mutex_unlock_arg].head!=NULL){
-					
-					PD* p=dequeue(&mutex_queue[mutex_unlock_arg]);
-					Mutex[mutex_unlock_arg]=p->pid;
-					//inheritance passes on
-					if((Cp->priority<p->priority)&&(Cp->past>-1)){
+		case UNLOCK:
+			if(Mutex[mutex_unlock_arg].owner!=Cp){
+				error_msg= FAIL_2_DEADLOCK;
+				OS_Abort();
+			}
+			else if(Mutex[mutex_unlock_arg].state==LOCKED&&Mutex[mutex_unlock_arg].count>1){
+				--Mutex[mutex_unlock_arg].count;
+			}
+			else if(Mutex[mutex_unlock_arg].mutex_queue->head!=NULL){
+				volatile PD* p=dequeue(Mutex[mutex_unlock_arg].mutex_queue);
+				
+				
+				/*Priority Inheritance*/
+				if(Mutex[mutex_unlock_arg].owner->priority>p->priority){
+					if(p->past==-1){
 						p->past=p->priority;
-						p->priority=Cp->priority;
 					}
-					p->state=READY;
-					enqueue(&ready_queue[p->priority],p);
-
+					p->priority=Mutex[mutex_unlock_arg].owner->priority;
 				}
-				else{
-					Mutex[mutex_unlock_arg]=-1;
-				}
-				//reset Cp-> priority
-				if(Cp->past>-1){
-					
-					Cp->priority=Cp->past;
-					Cp->past=-1;
-				}
-			preemption();
+				Mutex[mutex_unlock_arg].owner->priority=Mutex[mutex_unlock_arg].owner->past;
+				Mutex[mutex_unlock_arg].owner->past=-1;
+				Mutex[mutex_unlock_arg].owner=p;
+				p->state=READY;
+				enqueue(&ready_queue[p->priority],p);
+				preemption();
+			}
+			else{
+				Mutex[mutex_unlock_arg].state=FREE;
+				Mutex[mutex_unlock_arg].count=0;
+			}
 			break;
 			
 		
@@ -577,10 +629,6 @@ void set_timer()
 void OS_Init() 
 {
 
-	DDRA= (1<<PA0);
-	DDRA |= (1<<PA1);
-	PORTA &= ~(1<<PA0);
-	PORTA &= ~(1<<PA1);
 	
 	DDRC |= (1<<PC0);	//pin 37
 	DDRC |= (1<<PC1);	//pin 36
@@ -609,16 +657,21 @@ void OS_Init()
    }
 	for (x=0;x<MAXMUTEX;x++){
 		//un owned mutex=-1, owned mutex=pid of owner, mutex identified by index in mutex array.
-		Mutex[x]=-1;
-		mutex_queue[x].head=NULL;
-		mutex_queue[x].tail=NULL;
+		
+		Mutex[x].state=OPEN;
+		Mutex[x].owner=NULL;
+		Mutex[x].mutex_queue->head=NULL;
+		Mutex[x].mutex_queue->tail=NULL;
+		Mutex[x].count=0;
 			
 	}
 	Process[MAXPROCESS-1].state=DEAD;
 	Process[MAXPROCESS-1].next=NULL;
 	dead_pool_queue.head = &Process[0];
 	dead_pool_queue.tail = &Process[MAXPROCESS - 1];
+	Kernel_Create_Task(idle,11,0);
 }
+
 static void _delay_25ms(void)
 {
 	uint16_t i;
@@ -630,8 +683,6 @@ static void _delay_25ms(void)
 
 void OS_Abort(void)
 {
-	int i=0;
-	int x;
 	switch (error_msg){
 		case ERR_1_TOO_MANY_TASK:
 				PORTC|=(1<<PC0);
@@ -690,7 +741,8 @@ void OS_Start()
 MUTEX Mutex_Init(void){
 	int x;
 	for(x=0;x<MAXMUTEX;x++){
-		if (Mutex[x]==-1){
+		if (Mutex[x].state==OPEN){
+			Mutex[x].state=FREE;
 			return x;
 		}
 	}
@@ -702,40 +754,23 @@ MUTEX Mutex_Init(void){
 
 
 void Mutex_Lock(MUTEX m){
-	if (Mutex[m]==-1){
-
-		Mutex[m]=Cp->pid;
-	}
-	else{
-
-		//block task on mutex, priority inheritance
-		Cp->request=BLOCK;
+		uint8_t sreg;
+		sreg=SREG;
 		Disable_Interrupt();
-		if (Cp->priority<Process[Mutex[m]].priority){
-			if(Process[Mutex[m]].past==-1){
-				Process[Mutex[m]].past=Process[Mutex[m]].priority;
-			}
-			Process[Mutex[m]].priority=Cp->priority;
-		}
-				mutex_unlock_arg=m;
-
-
+		Cp->request=LOCK;
+		mutex_unlock_arg=m;
 		Enter_Kernel();
-	}
+		SREG=sreg;
 }
 
 void Mutex_Unlock(MUTEX m){
-	if(Mutex[m]==Cp->pid){
+		uint8_t sreg;
+		sreg=SREG;
 		Disable_Interrupt();
-		Cp->request=UNBLOCK;
+		Cp->request=UNLOCK;
 		mutex_unlock_arg=m;
 		Enter_Kernel();
-		//enter kernel to unblock task if necessary
-	}
-	else{
-		//mutex not owned
-		OS_Abort();
-	}
+		SREG=sreg;
 }
 
 /**
@@ -745,13 +780,17 @@ void Mutex_Unlock(MUTEX m){
   */
 PID Task_Create( voidfuncptr f, PRIORITY py, int arg)
 {
+		uint8_t sreg;
+		sreg=SREG;
    if (KernelActive ) {
      Disable_Interrupt();
 	  kernel_request_create_args.code = (voidfuncptr)f;
 	  kernel_request_create_args.arg = arg;
 	  kernel_request_create_args.py = py;
      Cp ->request = CREATE;
+	  
      Enter_Kernel();
+	  SREG=sreg;
 	  return kernel_request_create_args.pid;
    } else { 
       /* call the RTOS function directly */
@@ -776,24 +815,25 @@ void Task_Next()
 
 void Task_Sleep(TICK t)
 {
-	
-	if (KernelActive) 
-	{
+		uint8_t sreg;
+		sreg=SREG;
 		Disable_Interrupt();
 		Cp ->request = SLEEP;
-		Cp->tick = t;
+		Cp->state=SLEEPING;
+		Cp->tick=t;
 		Enter_Kernel();
-		
-	}
+		SREG=sreg;
+	
 }
 
 void Task_Yield()
 {
-	if (KernelActive) {
+		uint8_t sreg;
+		sreg=SREG;
 		Disable_Interrupt();
 		Cp ->request = YIELD;
 		Enter_Kernel();
-	}
+		SREG=sreg;
 }
 
 int  Task_GetArg(void){
@@ -810,9 +850,12 @@ void Task_Suspend( PID p ){
 		}
 	}
 	if (p==Cp->pid){
+		uint8_t sreg;
+		sreg=SREG;
 		Disable_Interrupt();
 		Cp ->request = SUSPEND;
 		Enter_Kernel();
+		SREG=sreg;
 	}
 }  
 void Task_Resume( PID p ){
@@ -823,28 +866,25 @@ void Task_Resume( PID p ){
 			break;
 		}
 	}
+	uint8_t sreg;
+	sreg=SREG;
 	Disable_Interrupt();
 	Cp ->request = RESUME;
 	Enter_Kernel();
+	SREG=sreg;
 }
 /**
   * The calling task terminates itself.
   */
 void Task_Terminate() 
 {
-   if (KernelActive) {
+		uint8_t sreg;
+		sreg=SREG;
       Disable_Interrupt();
       Cp-> request = TERMINATE;
       Enter_Kernel();
      /* never returns here! */
-   }
-}
-void Ping() 
-
-{
-
-	error_msg=ERR_1_TOO_MANY_TASK;
-	OS_Abort();
+		SREG=sreg;
 }
 
 
@@ -852,37 +892,32 @@ void Ping()
   * A cooperative "Pong" task.
   * Added testing code for LEDs.
   */
-void Pong() 
-{
 
-}
-
-void a_main(){
-	 Task_Create(Ping,0,0);
-	 Task_Create(Pong,0,0);
-	 Task_Terminate();
- }
- 
 
 ISR(TIMER1_COMPA_vect)
 {
+	uint8_t sreg;
 	volatile PD* curr;
 	curr = sleep_queue.head;
 	while(curr!= NULL){
 		if(curr->tick!=0){
 			curr->tick--;
 		}
-
 		curr = curr->next;
 	}
 	if(sleep_queue.head!=NULL){
 		if(sleep_queue.head->tick == 0)
 		{
+			PORTA|=(1<<PA3);
+			PORTA&=~(1<<PA3);
+			sreg = SREG;
+			Disable_Interrupt();
 			Cp->request = WAKE;
 			Enter_Kernel();
+			SREG=sreg;
 		}
-	}	
-	}
+	}		
+}
 
 int main() 
 {

@@ -37,6 +37,10 @@ SUBDIRS :=
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
+../T5Sleep.c \
+../T4Suspend.c \
+../T3Preemption.c \
+../T2Yield.c \
 ../os.c
 
 
@@ -48,18 +52,34 @@ ASM_SRCS +=
 
 
 OBJS +=  \
+T5Sleep.o \
+T4Suspend.o \
+T3Preemption.o \
+T2Yield.o \
 os.o \
 cswitch.o
 
 OBJS_AS_ARGS +=  \
+T5Sleep.o \
+T4Suspend.o \
+T3Preemption.o \
+T2Yield.o \
 os.o \
 cswitch.o
 
 C_DEPS +=  \
+T5Sleep.d \
+T4Suspend.d \
+T3Preemption.d \
+T2Yield.d \
 os.d \
 cswitch.d
 
 C_DEPS_AS_ARGS +=  \
+T5Sleep.d \
+T4Suspend.d \
+T3Preemption.d \
+T2Yield.d \
 os.d \
 cswitch.d
 
@@ -77,6 +97,14 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
+
+
+
+
+
+
 
 
 

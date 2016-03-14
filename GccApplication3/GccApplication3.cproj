@@ -110,6 +110,18 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="T5Sleep.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="T4Suspend.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="T3Preemption.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="T2Yield.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="error_code.h">
       <SubType>compile</SubType>
     </Compile>
